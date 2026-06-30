@@ -1,0 +1,52 @@
+# Render Blueprint — provisions Postgres + the API in one go.
+# Dashboard → New → Blueprint → pick this repo. Render reads this file.
+# Docs: https://render.com/docs/blueprint-spec
+
+databases:
+  - name: taskmgmt-db
+    databaseName: taskmgmt
+    user: taskmgmt
+    plan: free # free Postgres is deleted after 30 days — upgrade for anything real
+    region: frankfurt
+    postgresMajorVersion: '16'
+
+services:
+  - type: web
+    name: task-management-api
+    runtime: node
+    plan: free # free web services cold-start (~30-50s) after 15 min idle
+    region: frankfurt # must match the database region for the internal DB URL
+    branch: dbackend-submit
+    buildCommand: npm ci && npx prisma generate && npm run build
+    # migrate deploy runs on every boot (idempotent); keeps schema in sync.
+    # On a PAID plan you can move this to `preDeployCommand` instead.
+    startCommand: npx prisma migrate deploy && node dist/server.js
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: '20'
+      - key: NODE_ENV
+        value: production
+      # Wired automatically from the database above (internal connection string).
+      - key: DATABASE_URL
+        fromDatabase:
+          name: taskmgmt-db
+          property: connectionString
+      # Render generates strong random secrets (>=32 chars) on first deploy.
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: JWT_ACCESS_TTL
+        value: 15m
+      - key: JWT_REFRESH_TTL
+        value: 7d
+      - key: CORS_ORIGIN
+        value: '*' # tighten to your frontend origin in production
+      - key: STORAGE_DRIVER
+        value: local # NOTE: free disk is ephemeral — uploads vanish on redeploy
+      # Set to your real Render URL after the first deploy (e.g.
+      # https://task-management-api.onrender.com). Render prompts for it.
+      - key: PUBLIC_BASE_URL
+        sync: false
