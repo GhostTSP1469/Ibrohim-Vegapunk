@@ -16,6 +16,15 @@ export const clearTokens = (): void => {
   localStorage.removeItem("refresh");
 };
 
+// Pull a human message out of the backend error envelope { error: { message } }.
+export const getErrorMessage = (err: unknown): string => {
+  if (axios.isAxiosError(err)) {
+    const data = err.response?.data as { error?: { message?: string } } | undefined;
+    return data?.error?.message ?? err.message;
+  }
+  return "Unexpected error";
+};
+
 export const axiosRequest = axios.create({ baseURL });
 
 // Attach the access token to every outgoing request.
