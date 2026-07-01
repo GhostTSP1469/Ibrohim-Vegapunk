@@ -11,6 +11,7 @@
 
 import Fastify, { type FastifyInstance } from 'fastify';
 import type { LoggerOptions } from 'pino';
+import cors from '@fastify/cors';
 import { config, isDev } from './config/index.js';
 import errorHandlerPlugin from './plugins/error-handler.js';
 import swaggerPlugin from './plugins/swagger.js';
@@ -77,6 +78,14 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
   // capture their schemas; prisma decorates `app.prisma`. Security plugins
   // (helmet, cors, rate-limit) are added in the Phase 4 hardening pass.
   await app.register(errorHandlerPlugin);
+  // CORS: allow the browser frontend to call the API. `*` reflects any origin;
+  // otherwise a comma-separated allowlist from CORS_ORIGIN.
+  await app.register(cors, {
+    origin:
+      config.CORS_ORIGIN === '*'
+        ? true
+        : config.CORS_ORIGIN.split(',').map((o) => o.trim()),
+  });
   await app.register(swaggerPlugin);
   await app.register(prismaPlugin);
   await app.register(storagePlugin);
