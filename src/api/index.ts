@@ -54,12 +54,28 @@ axiosRequest.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
-// The access token lives ~15 min. On a 401 we transparently rotate the token
-// pair via /auth/refresh (a raw axios call, so it doesn't re-enter this
-// interceptor) and replay the original request once. If refresh fails, clear
-// the session and send the user back to /auth.
+// On a 401 we transparently rotate the token pair via /auth/refresh and replay
+// the original request once. Because the backend ROTATES (revokes) the refresh
+// token on every use, several requests failing at once must NOT each call
+// refresh — the first would revoke the token and the rest would fail, logging
+// the user out. So refresh is single-flight: concurrent 401s await one shared
+// refresh call.
 interface RetriableConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
+}
+
+let refreshPromise: Promise<string> | null = null;
+
+async function rotateTokens(): Promise<string> {
+  const refresh = getRefresh();
+  if (!refresh) throw new Error("No refresh token");
+  // Raw axios (not axiosRequest) so it doesn't re-enter this interceptor.
+  const { data } = await axios.post<{ access_token: string; refresh_token: string }>(
+    `${baseURL}/auth/refresh`,
+    { refresh_token: refresh },
+  );
+  SaveTokens(data.access_token, data.refresh_token);
+  return data.access_token;
 }
 
 axiosRequest.interceptors.response.use(
@@ -70,22 +86,18 @@ axiosRequest.interceptors.response.use(
     }
 
     const original = error.config as RetriableConfig | undefined;
-    const refresh = getRefresh();
-
-    if (!original || original._retry || !refresh) {
-      clearTokens();
+    if (!original || original._retry || !getRefresh()) {
       return Promise.reject(error);
     }
-
     original._retry = true;
 
     try {
-      const { data } = await axios.post<{ access_token: string; refresh_token: string }>(
-        `${baseURL}/auth/refresh`,
-        { refresh_token: refresh },
-      );
-      SaveTokens(data.access_token, data.refresh_token);
-      original.headers.Authorization = `Bearer ${data.access_token}`;
+      // Share one in-flight refresh across all concurrent 401s.
+      refreshPromise ??= rotateTokens().finally(() => {
+        refreshPromise = null;
+      });
+      const newAccess = await refreshPromise;
+      original.headers.Authorization = `Bearer ${newAccess}`;
       return axiosRequest(original);
     } catch (refreshError) {
       clearTokens();

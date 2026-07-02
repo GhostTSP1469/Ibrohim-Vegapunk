@@ -16,6 +16,14 @@ import {
   Activity,
   Attachments,
   Notifications,
+  Overview,
+  WorkItems,
+  Views,
+  Pages,
+  Settings,
+  Preferences,
+  Friends,
+  Messages,
 } from "./router/router";
 
 const wp = "w/:workspaceSlug/projects/:projectId";
@@ -35,8 +43,16 @@ export default function App() {
           element: <Layout />,
           children: [
             { index: true, element: <Workspace /> },
+            { path: "friends", element: <Friends /> },
+            { path: "messages", element: <Messages /> },
+            { path: "settings", element: <Settings /> },
+            { path: "preferences", element: <Preferences /> },
             { path: "w/:workspaceSlug/projects", element: <Projects /> },
             { path: "w/:workspaceSlug/notifications", element: <Notifications /> },
+            { path: `${wp}/overview`, element: <Overview /> },
+            { path: `${wp}/work-items`, element: <WorkItems /> },
+            { path: `${wp}/views`, element: <Views /> },
+            { path: `${wp}/pages`, element: <Pages /> },
             { path: `${wp}/states`, element: <States /> },
             { path: `${wp}/labels`, element: <Labels /> },
             { path: `${wp}/issues`, element: <Issues /> },

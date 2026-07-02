@@ -13,3 +13,13 @@ export const IssueRelations = lazy(() => import("../pages/IssueRelations/IssueRe
 export const Activity = lazy(() => import("../pages/Activity/Activity"));
 export const Attachments = lazy(() => import("../pages/Attachments/Attachments"));
 export const Notifications = lazy(() => import("../pages/Notifications/Notifications"));
+
+// New UI (friend's shell) + social features
+export const Overview = lazy(() => import("../pages/Overview/Overview"));
+export const WorkItems = lazy(() => import("../pages/WorkItems/WorkItems"));
+export const Views = lazy(() => import("../pages/Views/Views"));
+export const Pages = lazy(() => import("../pages/Pages/Pages"));
+export const Settings = lazy(() => import("../pages/Settings/Settings"));
+export const Preferences = lazy(() => import("../pages/Preferences/Preferences"));
+export const Friends = lazy(() => import("../pages/Friends/Friends"));
+export const Messages = lazy(() => import("../pages/Messages/Messages"));
