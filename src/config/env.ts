@@ -36,8 +36,8 @@ export const envSchema = z
     // --- Auth / JWT --- (secrets required; no defaults, never committed)
     JWT_ACCESS_SECRET: z.string().min(32, 'JWT_ACCESS_SECRET must be at least 32 characters'),
     JWT_REFRESH_SECRET: z.string().min(32, 'JWT_REFRESH_SECRET must be at least 32 characters'),
-    JWT_ACCESS_TTL: duration.default('15m'),
-    JWT_REFRESH_TTL: duration.default('7d'),
+    JWT_ACCESS_TTL: duration.default('8h'),
+    JWT_REFRESH_TTL: duration.default('30d'),
 
     // --- CORS --- (comma-separated origins, or `*`; configured per environment)
     CORS_ORIGIN: z.string().min(1).default('*'),
