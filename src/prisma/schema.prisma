@@ -61,6 +61,13 @@ enum NotificationType {
   mentioned
 }
 
+// Friend-request / connection lifecycle (global, account-level social graph).
+enum ConnectionStatus {
+  pending
+  accepted
+  rejected
+}
+
 // ─── Models ──────────────────────────────────────────────────────────────────
 
 model User {
@@ -86,6 +93,12 @@ model User {
   attachments           Attachment[]
   notifications         Notification[]    @relation("NotificationRecipient")
   triggered_notifications Notification[]  @relation("NotificationActor")
+
+  sent_connections     Connection[]   @relation("ConnectionRequester")
+  received_connections Connection[]   @relation("ConnectionAddressee")
+  conversations_a      Conversation[] @relation("ConversationUserA")
+  conversations_b      Conversation[] @relation("ConversationUserB")
+  sent_messages        Message[]      @relation("MessageSender")
 }
 
 // Rotating refresh tokens. One row per live token; revoked_at set on logout/rotation.
@@ -444,4 +457,57 @@ model Notification {
   @@index([recipient_id, workspace_id, is_read])
   @@index([workspace_id])
   @@index([issue_id])
+}
+
+// ─── Social: connections (friend requests) + direct messages ──────────────────
+
+// A directional friend request that becomes a mutual connection once accepted.
+// Global (not workspace-scoped): the pair is unique regardless of who asked.
+model Connection {
+  id           String           @id @default(uuid())
+  requester_id String
+  addressee_id String
+  status       ConnectionStatus @default(pending)
+  created_at   DateTime         @default(now())
+  updated_at   DateTime         @updatedAt
+
+  requester User @relation("ConnectionRequester", fields: [requester_id], references: [id], onDelete: Cascade)
+  addressee User @relation("ConnectionAddressee", fields: [addressee_id], references: [id], onDelete: Cascade)
+
+  @@unique([requester_id, addressee_id])
+  @@index([addressee_id, status])
+  @@index([requester_id, status])
+}
+
+// 1:1 direct-message thread. `user_a_id`/`user_b_id` are stored normalized
+// (a < b) so the unique pair works for get-or-create regardless of order.
+model Conversation {
+  id              String   @id @default(uuid())
+  user_a_id       String
+  user_b_id       String
+  last_message_at DateTime @default(now())
+  created_at      DateTime @default(now())
+
+  user_a   User      @relation("ConversationUserA", fields: [user_a_id], references: [id], onDelete: Cascade)
+  user_b   User      @relation("ConversationUserB", fields: [user_b_id], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@unique([user_a_id, user_b_id])
+  @@index([user_a_id])
+  @@index([user_b_id])
+}
+
+model Message {
+  id              String    @id @default(uuid())
+  conversation_id String
+  sender_id       String
+  body            String
+  is_read         Boolean   @default(false)
+  created_at      DateTime  @default(now())
+  deleted_at      DateTime?
+
+  conversation Conversation @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+  sender       User         @relation("MessageSender", fields: [sender_id], references: [id], onDelete: Cascade)
+
+  @@index([conversation_id, created_at])
 }

@@ -32,6 +32,9 @@ import { issueRelationRoutes } from './modules/issues/relations/routes.js';
 import { activityRoutes } from './modules/activity/routes.js';
 import { attachmentRoutes, attachmentDeleteRoutes } from './modules/attachments/routes.js';
 import { notificationRoutes } from './modules/notifications/routes.js';
+import { userRoutes } from './modules/users/routes.js';
+import { connectionRoutes } from './modules/connections/routes.js';
+import { conversationRoutes } from './modules/conversations/routes.js';
 
 export interface BuildAppOptions {
   /** Pino logger options, or `false`/`true` to disable/enable the default logger. */
@@ -146,6 +149,12 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
   await app.register(notificationRoutes, {
     prefix: '/api/v1/workspaces/:workspaceSlug/notifications',
   });
+
+  // Global social features (not workspace-scoped): user search, friend
+  // requests (connections), and 1:1 direct messages.
+  await app.register(userRoutes, { prefix: '/api/v1/users' });
+  await app.register(connectionRoutes, { prefix: '/api/v1/connections' });
+  await app.register(conversationRoutes, { prefix: '/api/v1/conversations' });
 
   return app;
 }
