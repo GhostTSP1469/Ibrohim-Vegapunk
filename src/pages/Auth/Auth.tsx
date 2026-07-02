@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { Mail, Lock, User, Loader2, Globe, UserRound } from "lucide-react";
 import { useAuthStore } from "./AuthZustand";
+import { getToken } from "../../api";
 
 type LoginFormValues = { email: string; password: string };
 type RegisterFormValues = { displayName: string; email: string; password: string };
