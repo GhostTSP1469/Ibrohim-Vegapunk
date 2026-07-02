@@ -16,6 +16,19 @@ export const clearTokens = (): void => {
   localStorage.removeItem("refresh");
 };
 
+// The API expects dates as full ISO datetimes; <input type="date"> gives
+// "YYYY-MM-DD". Convert (empty → undefined so the field is simply omitted).
+export const toIsoDate = (value?: string): string | undefined =>
+  value ? new Date(value).toISOString() : undefined;
+
+// Some list endpoints return a bare array, others wrap it as { data: [...] }
+// (cursor pagination). Normalise both to a plain array so the UI never crashes.
+export const asList = <T>(payload: unknown): T[] => {
+  if (Array.isArray(payload)) return payload as T[];
+  const inner = (payload as { data?: unknown } | null | undefined)?.data;
+  return Array.isArray(inner) ? (inner as T[]) : [];
+};
+
 // Pull a human message out of the backend error envelope { error: { message } }.
 export const getErrorMessage = (err: unknown): string => {
   if (axios.isAxiosError(err)) {

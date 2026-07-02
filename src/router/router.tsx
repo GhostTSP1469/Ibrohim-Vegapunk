@@ -1,24 +1,15 @@
-import { createBrowserRouter, Navigate } from "react-router-dom";
-import type { ReactNode } from "react";
-import Auth from "../pages/Auth/Auth";
-import Layout from "../Layout/Layout";
-import Workspace from "../pages/Workspace/Workspace";
-import { getToken } from "../api";
+import { lazy } from "react";
 
-// Guards the app area: no access token → bounce to /auth.
-function Protected({ children }: { children: ReactNode }) {
-  return getToken() ? children : <Navigate to="/auth" replace />;
-}
-
-export const router = createBrowserRouter([
-  { path: "/auth", element: <Auth /> },
-  {
-    path: "/",
-    element: (
-      <Protected>
-        <Layout />
-      </Protected>
-    ),
-    children: [{ index: true, element: <Workspace /> }],
-  },
-]);
+export const Auth = lazy(() => import("../pages/Auth/Auth"));
+export const Workspace = lazy(() => import("../pages/Workspace/Workspace"));
+export const Projects = lazy(() => import("../pages/Projects/Projects"));
+export const States = lazy(() => import("../pages/States/States"));
+export const Labels = lazy(() => import("../pages/Labels/Labels"));
+export const Issues = lazy(() => import("../pages/Issues/Issues"));
+export const Comments = lazy(() => import("../pages/Comments/Comments"));
+export const Cycles = lazy(() => import("../pages/Cycles/Cycles"));
+export const Modules = lazy(() => import("../pages/Modules/Modules"));
+export const IssueRelations = lazy(() => import("../pages/IssueRelations/IssueRelations"));
+export const Activity = lazy(() => import("../pages/Activity/Activity"));
+export const Attachments = lazy(() => import("../pages/Attachments/Attachments"));
+export const Notifications = lazy(() => import("../pages/Notifications/Notifications"));
