@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import { Layers } from "lucide-react";
 import { useAuthStore } from "./AuthZustand";
+import { getToken } from "../../api";
 
 const field =
   "w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100";
@@ -28,6 +29,9 @@ export default function Auth() {
         : await login(email, password);
     if (ok) navigate("/");
   };
+
+  // Already signed in → skip the auth page.
+  if (getToken()) return <Navigate to="/" replace />;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-brand-50 via-gray-50 to-gray-100 p-4">
