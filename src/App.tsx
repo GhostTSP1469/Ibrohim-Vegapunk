@@ -2,28 +2,7 @@ import { Suspense } from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Layout from "./Layout/Layout";
 import { ProtectedRoute } from "./router/ProtectedRoute";
-import {
-  Auth,
-  Workspace,
-  Projects,
-  States,
-  Labels,
-  Issues,
-  Comments,
-  Cycles,
-  Modules,
-  IssueRelations,
-  Activity,
-  Attachments,
-  Notifications,
-  Overview,
-  WorkItems,
-  Views,
-  Pages,
-  Settings,
-  Preferences,
-  Friends,
-  Messages,
+import {Auth,Workspace,Projects,States,Labels,Issues,Comments,Cycles,Modules,IssueRelations,Activity,Attachments,Notifications,Overview,WorkItems,Views,Pages,Settings,Preferences,Friends,Messages,Wiki,AI,
 } from "./router/router";
 
 const wp = "w/:workspaceSlug/projects/:projectId";
@@ -47,6 +26,8 @@ export default function App() {
             { path: "messages", element: <Messages /> },
             { path: "settings", element: <Settings /> },
             { path: "preferences", element: <Preferences /> },
+            { path: "wiki", element: <Wiki /> },
+            { path: "ai", element: <AI /> },
             { path: "w/:workspaceSlug/projects", element: <Projects /> },
             { path: "w/:workspaceSlug/notifications", element: <Notifications /> },
             { path: `${wp}/overview`, element: <Overview /> },
@@ -62,6 +43,8 @@ export default function App() {
             { path: `${wpi}/relations`, element: <IssueRelations /> },
             { path: `${wpi}/activity`, element: <Activity /> },
             { path: `${wpi}/attachments`, element: <Attachments /> },
+            { path: `${wpi}/wiki`, element: <Wiki /> },
+            { path: `${wpi}/ai`, element: <AI /> },
           ],
         },
       ],

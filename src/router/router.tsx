@@ -23,3 +23,5 @@ export const Settings = lazy(() => import("../pages/Settings/Settings"));
 export const Preferences = lazy(() => import("../pages/Preferences/Preferences"));
 export const Friends = lazy(() => import("../pages/Friends/Friends"));
 export const Messages = lazy(() => import("../pages/Messages/Messages"));
+export const Wiki = lazy(() => import("../pages/Wiki/Wiki"));
+export const AI = lazy(() => import("../pages/AI/AI"));
