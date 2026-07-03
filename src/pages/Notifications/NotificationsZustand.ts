@@ -1,7 +1,13 @@
 import { create } from "zustand";
 import { axiosRequest, getErrorMessage, asList } from "../../api";
 
-export type NotificationType = "issue_assigned" | "comment_added" | "mentioned";
+export type NotificationType =
+  | "issue_assigned"
+  | "comment_added"
+  | "mentioned"
+  | "change_requested"
+  | "change_approved"
+  | "change_rejected";
 
 export interface Notification {
   id: string;

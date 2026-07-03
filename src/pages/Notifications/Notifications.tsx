@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { Bell, UserPlus, MessageSquare, AtSign, CheckCheck } from "lucide-react";
+import { Bell, UserPlus, MessageSquare, AtSign, CheckCheck, ClipboardList, Check, X } from "lucide-react";
 import { useNotificationsStore, type Notification, type NotificationType } from "./NotificationsZustand";
 import { PageHeader, EmptyState, ErrorBanner, ghostBtn, card } from "../../components/ui/kit";
 
@@ -8,6 +8,9 @@ const META: Record<NotificationType, { icon: typeof Bell; text: string; classNam
   issue_assigned: { icon: UserPlus, text: "assigned you to an issue", className: "text-brand-600 bg-brand-50" },
   comment_added: { icon: MessageSquare, text: "commented on an issue", className: "text-emerald-600 bg-emerald-50" },
   mentioned: { icon: AtSign, text: "mentioned you", className: "text-amber-600 bg-amber-50" },
+  change_requested: { icon: ClipboardList, text: "requested a project settings change", className: "text-indigo-600 bg-indigo-50" },
+  change_approved: { icon: Check, text: "approved your change request", className: "text-emerald-600 bg-emerald-50" },
+  change_rejected: { icon: X, text: "rejected your change request", className: "text-red-600 bg-red-50" },
 };
 
 function timeAgo(iso: string): string {
