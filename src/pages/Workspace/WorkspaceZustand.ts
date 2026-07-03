@@ -33,6 +33,8 @@ interface WorkspaceState {
   addMember: (slug: string, data: { user_id: string; role?: string }) => Promise<boolean>;
   updateMemberRole: (slug: string, userId: string, role: string) => Promise<boolean>;
   removeMember: (slug: string, userId: string) => Promise<boolean>;
+  invite: (slug: string, data: { email: string; role: "admin" | "member" }) => Promise<boolean>;
+  leaveWorkspace: (slug: string) => Promise<boolean>;
 }
 
 export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
@@ -131,6 +133,28 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     try {
       await axiosRequest.delete(`/workspaces/${slug}/members/${userId}`);
       await get().fetchMembers(slug);
+      return true;
+    } catch (err) {
+      set({ error: getErrorMessage(err) });
+      return false;
+    }
+  },
+
+  // Invite a user by email with a role (creates a pending invite they accept).
+  invite: async (slug, data) => {
+    try {
+      await axiosRequest.post(`/workspaces/${slug}/invites`, data);
+      return true;
+    } catch (err) {
+      set({ error: getErrorMessage(err) });
+      return false;
+    }
+  },
+
+  // Request to leave the workspace (an owner/admin must approve).
+  leaveWorkspace: async (slug) => {
+    try {
+      await axiosRequest.post(`/workspaces/${slug}/leave`);
       return true;
     } catch (err) {
       set({ error: getErrorMessage(err) });

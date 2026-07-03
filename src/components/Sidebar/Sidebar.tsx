@@ -24,11 +24,14 @@ import {
   Eye,
   StickyNote,
   ClipboardList,
+  Mail,
+  UserCog,
   type LucideIcon,
 } from "lucide-react";
 import { useWorkspaceStore } from "../../pages/Workspace/WorkspaceZustand";
 import { useProjectsStore } from "../../pages/Projects/ProjectsZustand";
 import { useNotificationsStore } from "../../pages/Notifications/NotificationsZustand";
+import { useInvitesStore } from "../../pages/Invitations/InvitesZustand";
 
 const railItems = [
   { icon: Boxes, label: "Projects", active: true },
@@ -66,6 +69,7 @@ export default function Sidebar() {
   const { workspaces, fetchWorkspaces } = useWorkspaceStore();
   const { projects, fetchProjects } = useProjectsStore();
   const { unreadCount, fetchNotifications } = useNotificationsStore();
+  const inviteCount = useInvitesStore((s) => s.invites.length);
 
   const [panelOpen, setPanelOpen] = useState(true);
   const [workspaceOpen, setWorkspaceOpen] = useState(true);
@@ -147,6 +151,12 @@ export default function Sidebar() {
             <NavLink to="/messages" className={linkCls}>
               <MessageSquare size={16} /> <span>Messages</span>
             </NavLink>
+            <NavLink to="/invitations" className={linkCls}>
+              <Mail size={16} /> <span>Invitations</span>
+              {inviteCount > 0 && (
+                <span className="ml-auto rounded-full bg-brand-600 px-1.5 text-[11px] font-semibold text-white">{inviteCount}</span>
+              )}
+            </NavLink>
           </div>
 
           <div className="mt-3 flex-1 overflow-y-auto px-2">
@@ -169,6 +179,9 @@ export default function Sidebar() {
                   {unreadCount > 0 && (
                     <span className="ml-auto rounded-full bg-brand-600 px-1.5 text-[11px] font-semibold text-white">{unreadCount}</span>
                   )}
+                </NavLink>
+                <NavLink to={`/w/${workspaceSlug}/members`} className={linkCls}>
+                  <UserCog size={16} /> <span>Members</span>
                 </NavLink>
                 {projects.map((p) => {
                   const isOpen = openFolder === p.id;

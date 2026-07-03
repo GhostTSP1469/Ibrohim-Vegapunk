@@ -25,6 +25,8 @@ import {
   Friends,
   Messages,
   ChangeRequests,
+  Members,
+  Invitations,
 } from "./router/router";
 
 const wp = "w/:workspaceSlug/projects/:projectId";
@@ -46,9 +48,11 @@ export default function App() {
             { index: true, element: <Workspace /> },
             { path: "friends", element: <Friends /> },
             { path: "messages", element: <Messages /> },
+            { path: "invitations", element: <Invitations /> },
             { path: "settings", element: <Settings /> },
             { path: "preferences", element: <Preferences /> },
             { path: "w/:workspaceSlug/projects", element: <Projects /> },
+            { path: "w/:workspaceSlug/members", element: <Members /> },
             { path: "w/:workspaceSlug/notifications", element: <Notifications /> },
             { path: `${wp}/overview`, element: <Overview /> },
             { path: `${wp}/work-items`, element: <WorkItems /> },

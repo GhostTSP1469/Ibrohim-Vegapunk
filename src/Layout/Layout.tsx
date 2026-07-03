@@ -2,6 +2,7 @@ import { Suspense, useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import Header from "../components/Header/Header";
 import Sidebar from "../components/Sidebar/Sidebar";
+import { Toaster, AlertWatcher } from "../components/ui/Toaster";
 import { useAuthStore } from "../pages/Auth/AuthZustand";
 import { getToken } from "../api";
 
@@ -26,6 +27,8 @@ export default function Layout() {
           </div>
         </main>
       </div>
+      <AlertWatcher />
+      <Toaster />
     </div>
   );
 }
