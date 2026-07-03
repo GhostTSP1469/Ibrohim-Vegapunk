@@ -22,10 +22,12 @@ export interface Connection {
 
 interface FriendsState {
   results: PublicUser[];
+  suggestions: PublicUser[];
   connections: Connection[];
   loading: boolean;
   error: string | null;
   searchUsers: (query: string) => Promise<void>;
+  fetchSuggestions: () => Promise<void>;
   clearResults: () => void;
   fetchConnections: (params?: { status?: ConnectionStatus; direction?: "incoming" | "outgoing" }) => Promise<void>;
   sendRequest: (userId: string) => Promise<boolean>;
@@ -35,9 +37,20 @@ interface FriendsState {
 
 export const useFriendsStore = create<FriendsState>((set, get) => ({
   results: [],
+  suggestions: [],
   connections: [],
   loading: false,
   error: null,
+
+  // All users (no query) — for a "people you may know" panel.
+  fetchSuggestions: async () => {
+    try {
+      const { data } = await axiosRequest.get("/users/search");
+      set({ suggestions: asList<PublicUser>(data) });
+    } catch (err) {
+      set({ error: getErrorMessage(err) });
+    }
+  },
 
   searchUsers: async (query) => {
     if (!query.trim()) {

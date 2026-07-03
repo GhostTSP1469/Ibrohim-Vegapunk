@@ -1,16 +1,27 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Send, MessagesSquare } from "lucide-react";
+import { Send, MessagesSquare, UserPlus } from "lucide-react";
 import { useMessagesStore, type Conversation } from "./MessagesZustand";
+import { useFriendsStore } from "../Friends/FriendsZustand";
 import { useAuthStore } from "../Auth/AuthZustand";
-import { PageHeader, ErrorBanner, card } from "../../components/ui/kit";
+import { PageHeader, ErrorBanner, card, primaryBtn } from "../../components/ui/kit";
 
 const POLL_MS = 4000;
 
 export default function Messages() {
   const me = useAuthStore((s) => s.user?.id);
   const { conversations, activeId, messages, loading, error, fetchConversations, setActive, fetchMessages, sendMessage, markRead } = useMessagesStore();
+  const { suggestions, connections, fetchSuggestions, fetchConnections, sendRequest } = useFriendsStore();
   const [body, setBody] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
+
+  // "People you may know" — everyone you are not already connected with.
+  useEffect(() => {
+    void fetchSuggestions();
+    void fetchConnections();
+  }, [fetchSuggestions, fetchConnections]);
+
+  const relatedIds = new Set(connections.flatMap((c) => [c.requester_id, c.addressee_id]));
+  const people = suggestions.filter((u) => !relatedIds.has(u.id));
 
   // Initial load + poll the conversation list so new chats/unread appear live.
   useEffect(() => {
@@ -123,6 +134,31 @@ export default function Messages() {
           )}
         </div>
       </div>
+
+      {people.length > 0 && (
+        <div className={`p-4 ${card}`}>
+          <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-700">
+            <UserPlus size={16} className="text-brand-600" /> Возможные друзья
+          </h2>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {people.map((u) => (
+              <div key={u.id} className="flex items-center justify-between rounded-lg border border-gray-100 px-3 py-2">
+                <span className="flex min-w-0 items-center gap-2">
+                  <img
+                    src={avatar(u.display_name, u.avatar_url)}
+                    alt=""
+                    className="h-8 w-8 shrink-0 rounded-full border border-gray-200 object-cover"
+                  />
+                  <span className="truncate text-sm font-medium text-gray-800">{u.display_name}</span>
+                </span>
+                <button onClick={() => sendRequest(u.id)} className={primaryBtn + " shrink-0"}>
+                  <UserPlus size={14} /> Add
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
