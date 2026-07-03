@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { useWorkspaceStore } from "../../pages/Workspace/WorkspaceZustand";
 import { useProjectsStore } from "../../pages/Projects/ProjectsZustand";
+import { useNotificationsStore } from "../../pages/Notifications/NotificationsZustand";
 
 const railItems = [
   { icon: Boxes, label: "Projects", active: true },
@@ -62,6 +63,7 @@ export default function Sidebar() {
   const { workspaceSlug = "", projectId = "" } = useParams();
   const { workspaces, fetchWorkspaces } = useWorkspaceStore();
   const { projects, fetchProjects } = useProjectsStore();
+  const { unreadCount, fetchNotifications } = useNotificationsStore();
 
   const [panelOpen, setPanelOpen] = useState(true);
   const [workspaceOpen, setWorkspaceOpen] = useState(true);
@@ -75,6 +77,13 @@ export default function Sidebar() {
   useEffect(() => {
     if (workspaceSlug) void fetchProjects(workspaceSlug);
   }, [workspaceSlug, fetchProjects]);
+
+  useEffect(() => {
+    if (!workspaceSlug) return;
+    void fetchNotifications(workspaceSlug);
+    const t = setInterval(() => void fetchNotifications(workspaceSlug), 15000);
+    return () => clearInterval(t);
+  }, [workspaceSlug, fetchNotifications]);
 
   useEffect(() => {
     if (projectId) setOpenFolder(projectId);
@@ -155,6 +164,9 @@ export default function Sidebar() {
               <Accordion title="Projects" open={projectsOpen} onToggle={() => setProjectsOpen((v) => !v)}>
                 <NavLink to={`/w/${workspaceSlug}/notifications`} className={linkCls}>
                   <Bell size={16} /> <span>Notifications</span>
+                  {unreadCount > 0 && (
+                    <span className="ml-auto rounded-full bg-brand-600 px-1.5 text-[11px] font-semibold text-white">{unreadCount}</span>
+                  )}
                 </NavLink>
                 {projects.map((p) => {
                   const isOpen = openFolder === p.id;

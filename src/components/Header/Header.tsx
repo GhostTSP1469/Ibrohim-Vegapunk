@@ -13,10 +13,19 @@ import {
   Shapes,
 } from "lucide-react";
 import { useAuthStore } from "../../pages/Auth/AuthZustand";
+import { useWorkspaceStore } from "../../pages/Workspace/WorkspaceZustand";
+import { useNotificationsStore } from "../../pages/Notifications/NotificationsZustand";
 
 export default function Header() {
   const { user, logout } = useAuthStore();
+  const workspaces = useWorkspaceStore((s) => s.workspaces);
+  const unreadCount = useNotificationsStore((s) => s.unreadCount);
   const navigate = useNavigate();
+
+  const goNotifications = () => {
+    const ws = workspaces[0];
+    navigate(ws ? `/w/${ws.slug}/notifications` : "/");
+  };
 
   const [openMenu, setOpenMenu] = useState<"workspace" | "profile" | null>(null);
 
@@ -112,8 +121,13 @@ export default function Header() {
         <button className="rounded-full border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 transition-colors hover:bg-gray-50">
           Get Started
         </button>
-        <button className="flex h-8 w-8 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-100">
+        <button onClick={goNotifications} title="Notifications" className="relative flex h-8 w-8 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-100">
           <Inbox size={17} />
+          {unreadCount > 0 && (
+            <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white">
+              {unreadCount}
+            </span>
+          )}
         </button>
         <button className="flex h-8 w-8 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-100">
           <HelpCircle size={17} />

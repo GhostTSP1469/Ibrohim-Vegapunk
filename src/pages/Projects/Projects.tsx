@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Plus, Trash2, Pencil, Users, X, UserPlus, Check } from "lucide-react";
 import { useProjectsStore, type Project, type LookedUpUser } from "./ProjectsZustand";
+import { useWorkspaceStore } from "../Workspace/WorkspaceZustand";
 import { PageHeader, EmptyState, ErrorBanner, field, primaryBtn, ghostBtn, card } from "../../components/ui/kit";
 
 export default function Projects() {
@@ -11,6 +12,7 @@ export default function Projects() {
     fetchProjects, createProject, updateProject, deleteProject,
     fetchMembers, addMember, removeMember, lookupByEmail,
   } = useProjectsStore();
+  const addWorkspaceMember = useWorkspaceStore((s) => s.addMember);
 
   const [name, setName] = useState("");
   const [identifier, setIdentifier] = useState("");
@@ -55,6 +57,9 @@ export default function Projects() {
   };
   const onAddFound = async () => {
     if (!found || !modalProject) return;
+    // A user must be a workspace member before joining a project — add to the
+    // workspace first (no-op / ignored if they already are), then the project.
+    await addWorkspaceMember(workspaceSlug, { user_id: found.id, role: "member" });
     if (await addMember(workspaceSlug, modalProject.id, { user_id: found.id })) {
       setFound(null); setEmail(""); setLookupMsg(null);
     }
