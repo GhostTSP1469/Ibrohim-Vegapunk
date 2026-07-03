@@ -21,7 +21,7 @@ export default function Messages() {
   }, [fetchSuggestions, fetchConnections]);
 
   const relatedIds = new Set(connections.flatMap((c) => [c.requester_id, c.addressee_id]));
-  const people = suggestions.filter((u) => !relatedIds.has(u.id));
+  const people = suggestions.filter((u) => u.id !== me && !relatedIds.has(u.id));
 
   // Initial load + poll the conversation list so new chats/unread appear live.
   useEffect(() => {

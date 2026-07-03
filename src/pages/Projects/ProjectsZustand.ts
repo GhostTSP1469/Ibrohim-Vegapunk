@@ -21,6 +21,13 @@ export interface ProjectMember {
   user: { id: string; email: string; display_name: string; avatar_url: string | null };
 }
 
+export interface LookedUpUser {
+  id: string;
+  display_name: string;
+  avatar_url: string | null;
+  email: string;
+}
+
 interface ProjectsState {
   projects: Project[];
   members: ProjectMember[];
@@ -41,6 +48,7 @@ interface ProjectsState {
   fetchMembers: (slug: string, projectId: string) => Promise<void>;
   addMember: (slug: string, projectId: string, data: { user_id: string; role?: string }) => Promise<boolean>;
   removeMember: (slug: string, projectId: string, userId: string) => Promise<boolean>;
+  lookupByEmail: (email: string) => Promise<LookedUpUser | null>;
 }
 
 const base = (slug: string) => `/workspaces/${slug}/projects`;
@@ -134,6 +142,17 @@ export const useProjectsStore = create<ProjectsState>((set, get) => ({
     } catch (err) {
       set({ error: getErrorMessage(err) });
       return false;
+    }
+  },
+
+  // Resolve an email to a user (for the add-member-by-email modal).
+  // Returns null when no user has that email (or on any error).
+  lookupByEmail: async (email) => {
+    try {
+      const { data } = await axiosRequest.get<LookedUpUser>("/users/lookup", { params: { email } });
+      return data;
+    } catch {
+      return null;
     }
   },
 }));

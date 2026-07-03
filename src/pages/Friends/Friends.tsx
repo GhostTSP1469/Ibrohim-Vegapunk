@@ -38,6 +38,7 @@ export default function Friends() {
   const outgoing = connections.filter((c) => c.status === "pending" && c.requester_id === me);
   const list = tab === "friends" ? accepted : tab === "incoming" ? incoming : outgoing;
   const relatedIds = new Set(connections.flatMap((c) => [c.requester_id, c.addressee_id]));
+  const shownResults = results.filter((u) => u.id !== me); // never show your own account
 
   const onSearch = (e: FormEvent) => { e.preventDefault(); void searchUsers(q); };
   const onMessage = async (userId: string) => { const id = await openConversation(userId); if (id) navigate("/messages"); };
@@ -55,9 +56,9 @@ export default function Friends() {
         <button className={primaryBtn} disabled={loading}>Search</button>
       </form>
 
-      {results.length > 0 && (
+      {shownResults.length > 0 && (
         <div className={`divide-y divide-gray-100 ${card}`}>
-          {results.map((u) => (
+          {shownResults.map((u) => (
             <div key={u.id} className="flex items-center justify-between px-4 py-2.5">
               <span className="flex items-center gap-2.5">
                 <Avatar user={u} />
