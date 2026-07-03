@@ -19,6 +19,7 @@ import {AlertTriangle,SignalHigh,SignalMedium,SignalLow,Minus,Plus,CircleDashed,
   Flag,
   Boxes,
   Sparkles,
+  ArrowUpRight,
 } from "lucide-react";
 import { useIssuesStore, type Issue, type Priority } from "./IssuesZustand";
 import { useStatesStore, type WorkflowState } from "../States/StatesZustand";
@@ -367,12 +368,7 @@ export default function Issues() {
             />
           </div>
 
-          <button className="hidden items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 shadow-sm transition hover:bg-gray-50 md:flex">
-            <SlidersHorizontal size={13} /> Display
-          </button>
-          <button className="hidden items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 shadow-sm transition hover:bg-gray-50 md:flex">
-            <BarChart2 size={13} /> Analytics
-          </button>
+         
 
           <button
             onClick={() => setModalOpen(true)}
@@ -453,72 +449,91 @@ export default function Issues() {
           )}
 
           {/* ---------------- BOARD VIEW ---------------- */}
-          {view === "board" && (
-            <div className="flex gap-4 overflow-x-auto pb-4">
-              {groups.map(({ state, items }) => {
-                const { icon: GIcon } = stateVisual(state);
-                return (
-                  <div
-                    key={state?.id ?? "none"}
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={(e) => {
-                      const id = e.dataTransfer.getData("text/issue-id");
-                      const issue = issues.find((x) => x.id === id);
-                      if (issue && state) moveIssue(issue, state.id);
-                    }}
-                    className="flex w-72 shrink-0 flex-col rounded-xl bg-gray-50/70 p-2"
-                  >
-                    <div className="flex items-center gap-2 px-2 py-1.5">
-                      <GIcon size={14} style={state ? { color: state.color } : undefined} className="text-gray-400" />
-                      <span className="text-sm font-semibold text-gray-700">{state?.name ?? "No state"}</span>
-                      <span className="text-xs font-medium text-gray-400">{items.length}</span>
-                      <button
-                        onClick={() => {
-                          setModalOpen(true);
-                        }}
-                        className="ml-auto rounded-md p-1 text-gray-400 transition hover:bg-gray-200 hover:text-gray-600"
-                      >
-                        <Plus size={14} />
-                      </button>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      {items.map((i, idx) => (
-                        <div
-                          key={i.id}
-                          draggable
-                          onDragStart={(e) => e.dataTransfer.setData("text/issue-id", i.id)}
-                          className="row-in group cursor-grab rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:cursor-grabbing"
-                          style={{ animationDelay: `${idx * 30}ms` }}
-                        >
-                          <div className="mb-2 flex items-center justify-between">
-                            <span className="text-xs font-semibold text-gray-400">
-                              {workspaceSlug.slice(0, 3).toUpperCase() || "ISS"}-{i.sequence_id}
-                            </span>
-                            <Link
-                              to={`/w/${workspaceSlug}/projects/${projectId}/issues/${i.id}/comments`}
-                              className="rounded p-0.5 text-gray-300 opacity-0 transition hover:text-brand-600 group-hover:opacity-100"
-                            >
-                              <Pencil size={12} />
-                            </Link>
-                          </div>
-                          <Link
-                            to={`/w/${workspaceSlug}/projects/${projectId}/issues/${i.id}/comments`}
-                            className="line-clamp-2 text-sm font-medium text-gray-800 transition hover:text-brand-600"
-                          >
-                            {i.title}
-                          </Link>
-                          <div className="mt-3 flex items-center justify-between">
-                            <PriorityPill priority={i.priority} />
-                            <Avatar />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
+         {view === "board" && (
+          <div className="flex gap-4 overflow-x-auto pb-4 h-[calc(100vh-180px)] items-start">
+    {groups.map(({ state, items }) => {
+      const { icon: GIcon } = stateVisual(state);
+      return (
+        <div
+          key={state?.id ?? "none"}
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e) => {
+            const id = e.dataTransfer.getData("text/issue-id");
+            const issue = issues.find((x) => x.id === id);
+            if (issue && state) moveIssue(issue, state.id);
+          }}
+          className="flex w-[340px] shrink-0 flex-col rounded-xl bg-[#F4F5F6]/60 p-3 h-full max-h-full"
+        >
+          {/* Column Header */}
+          <div className="flex items-center gap-2 px-2 py-2 mb-3">
+            <GIcon size={15} style={state ? { color: state.color } : undefined} className="shrink-0" />
+            <span className="text-sm font-semibold text-gray-800">{state?.name ?? "No state"}</span>
+            <span className="text-sm text-gray-400 font-medium">{items.length}</span>
+            <div className="ml-auto flex items-center gap-1.5 text-gray-400">
+              <button className="p-0.5 hover:text-gray-700 transition">
+                <ArrowUpRight size={14} />
+              </button>
+              <button
+                onClick={() => setModalOpen(true)}
+                className="p-0.5 hover:text-gray-700 transition"
+              >
+                <Plus size={15} />
+              </button>
             </div>
-          )}
+          </div>
+
+          {/* Cards List Wrapper with Scroll */}
+          <div className="flex flex-col gap-2.5 overflow-y-auto pr-0.5 flex-1 custom-scrollbar">
+            {items.map((i) => (
+              <div
+                key={i.id}
+                draggable
+                onDragStart={(e) => e.dataTransfer.setData("text/issue-id", i.id)}
+                className="group cursor-grab rounded-xl border border-gray-200/80 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.02)] transition-all hover:border-gray-300 hover:shadow-sm"
+              >
+                {/* Issue Key */}
+                <span className="text-[11px] font-medium tracking-wide text-gray-400 uppercase block mb-2">
+                  {workspaceSlug.slice(0, 3).toUpperCase() || "ISS"}-{i.sequence_id}
+                </span>
+
+                {/* Issue Title */}
+                <Link
+                  to={`/w/${workspaceSlug}/projects/${projectId}/issues/${i.id}/comments`}
+                  className="text-[14px] font-semibold text-gray-900 block leading-snug mb-4 hover:text-brand-600 transition-colors"
+                >
+                  {i.title}
+                </Link>
+
+                {/* Footer Badges */}
+                <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5 px-2 py-1 rounded-md border border-gray-200/70 bg-white text-[11px] font-medium text-gray-600 shadow-[0_1px_1px_rgba(0,0,0,0.01)]">
+                    <GIcon size={11} style={state ? { color: state.color } : undefined} />
+                    <span>{state?.name ?? "No state"}</span>
+                  </div>
+                  
+                  <PriorityPill priority={i.priority} />
+                  
+                  <div className="ml-auto shrink-0">
+                    <Avatar />
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {/* Inline New Work Item Button at bottom of list */}
+            <button 
+              onClick={() => setModalOpen(true)}
+              className="flex items-center gap-2 text-gray-500 hover:text-gray-800 px-2 py-2 rounded-lg hover:bg-gray-200/40 transition-all w-full text-left mt-1"
+            >
+              <Plus size={15} className="text-gray-400" />
+              <span className="text-xs font-medium">New work item</span>
+            </button>
+          </div>
+        </div>
+      );
+    })}
+  </div>
+)}
 
           {/* ---------------- CALENDAR VIEW ---------------- */}
           {view === "calendar" && (
@@ -781,7 +796,7 @@ function IssueRow({
       </form>
     );
   }
-
+Search
   return (
     <div
       className="row-in group flex items-center gap-3 border-b border-gray-100 px-4 py-2.5 transition last:border-b-0 hover:bg-gray-50/70"
