@@ -94,10 +94,12 @@ export default function Projects() {
                   <p className="truncate font-semibold text-gray-800">{p.name}</p>
                   {p.description && <p className="mt-1 truncate text-xs text-gray-400">{p.description}</p>}
                 </Link>
-                <div className="absolute right-3 top-3 flex gap-1 opacity-0 transition group-hover:opacity-100">
-                  <button onClick={() => openMembers(p)} title="Members" className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-brand-600"><Users size={15} /></button>
-                  <button onClick={() => startEdit(p)} className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-brand-600"><Pencil size={15} /></button>
-                  <button onClick={() => deleteProject(workspaceSlug, p.id)} className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-red-600"><Trash2 size={15} /></button>
+                <div className="absolute right-3 top-3 flex gap-1">
+                  <button onClick={() => openMembers(p)} title="Members" className="flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-gray-600 shadow-sm hover:border-brand-300 hover:text-brand-600">
+                    <Users size={14} /> Members
+                  </button>
+                  <button onClick={() => startEdit(p)} title="Edit" className="rounded-lg border border-gray-200 bg-white p-1.5 text-gray-400 shadow-sm hover:text-brand-600"><Pencil size={14} /></button>
+                  <button onClick={() => deleteProject(workspaceSlug, p.id)} title="Delete" className="rounded-lg border border-gray-200 bg-white p-1.5 text-gray-400 shadow-sm hover:text-red-600"><Trash2 size={14} /></button>
                 </div>
               </div>
             ),
