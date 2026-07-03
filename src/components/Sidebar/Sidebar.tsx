@@ -23,6 +23,7 @@ import {
   Bell,
   Eye,
   StickyNote,
+  ClipboardList,
   type LucideIcon,
 } from "lucide-react";
 import { useWorkspaceStore } from "../../pages/Workspace/WorkspaceZustand";
@@ -54,6 +55,7 @@ function projectFiles(slug: string, pid: string): { icon: LucideIcon; label: str
     { icon: Tag, label: "Labels", to: `${base}/labels` },
     { icon: RefreshCw, label: "Cycles", to: `${base}/cycles` },
     { icon: Layers, label: "Modules", to: `${base}/modules` },
+    { icon: ClipboardList, label: "Requests", to: `${base}/change-requests` },
     { icon: Eye, label: "Views", to: `${base}/views` },
     { icon: StickyNote, label: "Pages", to: `${base}/pages` },
   ];

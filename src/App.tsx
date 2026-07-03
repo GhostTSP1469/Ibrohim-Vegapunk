@@ -24,6 +24,7 @@ import {
   Preferences,
   Friends,
   Messages,
+  ChangeRequests,
 } from "./router/router";
 
 const wp = "w/:workspaceSlug/projects/:projectId";
@@ -58,6 +59,7 @@ export default function App() {
             { path: `${wp}/issues`, element: <Issues /> },
             { path: `${wp}/cycles`, element: <Cycles /> },
             { path: `${wp}/modules`, element: <Modules /> },
+            { path: `${wp}/change-requests`, element: <ChangeRequests /> },
             { path: `${wpi}/comments`, element: <Comments /> },
             { path: `${wpi}/relations`, element: <IssueRelations /> },
             { path: `${wpi}/activity`, element: <Activity /> },
