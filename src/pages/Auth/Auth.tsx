@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { Mail, Lock, User, Loader2, Globe, UserRound } from "lucide-react";
 import { useAuthStore } from "./AuthZustand";
+import { getToken } from "../../api";
 
 type LoginFormValues = { email: string; password: string };
 type RegisterFormValues = { displayName: string; email: string; password: string };
@@ -34,6 +35,9 @@ export default function Auth() {
     const ok = await registerUser(data.email, data.password, data.displayName);
     if (ok) navigate("/");
   };
+
+  // Already signed in → never show the login page (fixes browser-back to /auth).
+  if (getToken()) return <Navigate to="/" replace />;
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gray-50 p-4">

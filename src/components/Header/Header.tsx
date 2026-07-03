@@ -36,7 +36,9 @@ export default function Header() {
 
   const onLogout = async () => {
     await logout();
-    navigate("/auth");
+    // Full reload so ALL in-memory stores (friends, messages, notifications…)
+    // are cleared — otherwise the next account would see the previous user's data.
+    window.location.href = "/auth";
   };
 
   return (
