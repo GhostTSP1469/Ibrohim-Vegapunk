@@ -1,22 +1,17 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
-import { Plus, Trash2, Pencil } from "lucide-react";
+import { Plus, Trash2, Pencil, Boxes } from "lucide-react";
 import { useWorkspaceStore, type Workspace as Ws } from "./WorkspaceZustand";
-
-const input =
-  "rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-brand-500";
-const btn =
-  "flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50";
+import { PageHeader, EmptyState, ErrorBanner, field, primaryBtn, ghostBtn, card } from "../../components/ui/kit";
 
 export default function Workspace() {
-  const { workspaces, loading, error, fetchWorkspaces, createWorkspace, updateWorkspace, deleteWorkspace } =
-    useWorkspaceStore();
+  const { workspaces, loading, error, fetchWorkspaces, createWorkspace, updateWorkspace, deleteWorkspace } = useWorkspaceStore();
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
 
   const [editId, setEditId] = useState<string | null>(null);
-  const [editName, setEditName] = useState("");
-  const [editSlug, setEditSlug] = useState("");
+  const [eName, setEName] = useState("");
+  const [eSlug, setESlug] = useState("");
 
   useEffect(() => {
     void fetchWorkspaces();
@@ -24,67 +19,63 @@ export default function Workspace() {
 
   const onCreate = async (e: FormEvent) => {
     e.preventDefault();
-    if (await createWorkspace({ name, slug })) {
-      setName("");
-      setSlug("");
-    }
+    if (await createWorkspace({ name, slug })) { setName(""); setSlug(""); }
   };
-
   const startEdit = (w: Ws) => {
     setEditId(w.id);
-    setEditName(w.name);
-    setEditSlug(w.slug);
+    setEName(w.name);
+    setESlug(w.slug);
   };
-
   const onSaveEdit = async (e: FormEvent, w: Ws) => {
     e.preventDefault();
-    if (await updateWorkspace(w.slug, { name: editName, slug: editSlug })) setEditId(null);
+    if (await updateWorkspace(w.slug, { name: eName, slug: eSlug })) setEditId(null);
   };
 
   return (
     <div className="space-y-5">
-      <h1 className="text-xl font-semibold text-gray-800">Workspaces</h1>
-      {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
+      <PageHeader title="Workspaces" count={workspaces.length} subtitle="Your teams and their projects." />
+      <ErrorBanner error={error} />
 
-      <form onSubmit={onCreate} className="flex flex-wrap items-center gap-2 rounded-xl border border-gray-200 bg-white p-3">
-        <input className={input + " flex-1"} placeholder="Workspace name" value={name} onChange={(e) => setName(e.target.value)} required />
-        <input className={input + " flex-1"} placeholder="slug" value={slug} onChange={(e) => setSlug(e.target.value)} required />
-        <button className={btn} disabled={loading}>
-          <Plus size={16} /> Create
-        </button>
+      <form onSubmit={onCreate} className={`flex flex-wrap items-center gap-2 p-3 ${card}`}>
+        <input className={field + " flex-1"} placeholder="Workspace name" value={name} onChange={(e) => setName(e.target.value)} required />
+        <input className={field + " w-40"} placeholder="slug" value={slug} onChange={(e) => setSlug(e.target.value)} required />
+        <button className={primaryBtn} disabled={loading}><Plus size={16} /> Create</button>
       </form>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {workspaces.map((w) =>
-          editId === w.id ? (
-            <form key={w.id} onSubmit={(e) => onSaveEdit(e, w)} className="space-y-2 rounded-xl border border-brand-300 bg-white p-4">
-              <input className={input + " w-full"} value={editName} onChange={(e) => setEditName(e.target.value)} required />
-              <input className={input + " w-full"} value={editSlug} onChange={(e) => setEditSlug(e.target.value)} required />
-              <div className="flex gap-2">
-                <button className={btn} disabled={loading}>Save</button>
-                <button type="button" onClick={() => setEditId(null)} className="text-sm text-gray-500 hover:underline">Cancel</button>
-              </div>
-            </form>
-          ) : (
-            <div key={w.id} className="group relative rounded-xl border border-gray-200 bg-white p-4 transition hover:border-brand-300 hover:shadow-sm">
-              <Link to={`/w/${w.slug}/projects`} className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-600 font-semibold text-white">
-                  {w.name.charAt(0).toUpperCase()}
+      {workspaces.length === 0 && !loading ? (
+        <EmptyState icon={<Boxes size={28} />} text="No workspaces yet — create your first one above." />
+      ) : (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {workspaces.map((w) =>
+            editId === w.id ? (
+              <form key={w.id} onSubmit={(e) => onSaveEdit(e, w)} className={`space-y-2 p-4 ${card}`}>
+                <input className={field} value={eName} onChange={(e) => setEName(e.target.value)} required />
+                <input className={field} value={eSlug} onChange={(e) => setESlug(e.target.value)} required />
+                <div className="flex gap-2">
+                  <button className={primaryBtn} disabled={loading}>Save</button>
+                  <button type="button" onClick={() => setEditId(null)} className={ghostBtn}>Cancel</button>
                 </div>
-                <div className="min-w-0">
-                  <p className="truncate font-medium text-gray-800">{w.name}</p>
-                  <p className="truncate text-xs text-gray-400">/{w.slug}</p>
+              </form>
+            ) : (
+              <div key={w.id} className={`group relative p-4 transition hover:-translate-y-0.5 hover:shadow-md ${card}`}>
+                <Link to={`/w/${w.slug}/projects`} className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-linear-to-br from-brand-500 to-brand-700 text-lg font-semibold text-white shadow-sm">
+                    {w.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold text-gray-800">{w.name}</p>
+                    <p className="truncate text-xs text-gray-400">/{w.slug}</p>
+                  </div>
+                </Link>
+                <div className="absolute right-3 top-3 flex gap-1 opacity-0 transition group-hover:opacity-100">
+                  <button onClick={() => startEdit(w)} className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-brand-600"><Pencil size={15} /></button>
+                  <button onClick={() => deleteWorkspace(w.slug)} className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-red-600"><Trash2 size={15} /></button>
                 </div>
-              </Link>
-              <div className="absolute right-3 top-3 flex gap-2 opacity-0 group-hover:opacity-100">
-                <button onClick={() => startEdit(w)} className="text-gray-300 hover:text-brand-600"><Pencil size={16} /></button>
-                <button onClick={() => deleteWorkspace(w.slug)} className="text-gray-300 hover:text-red-600"><Trash2 size={16} /></button>
               </div>
-            </div>
-          ),
-        )}
-      </div>
-      {!loading && workspaces.length === 0 && <p className="text-sm text-gray-400">No workspaces yet.</p>}
+            ),
+          )}
+        </div>
+      )}
     </div>
   );
 }

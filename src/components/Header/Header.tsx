@@ -6,7 +6,7 @@ import {
   Settings,
   Plus,
   Mail,
-  LogOut,
+   LogOut,
   SlidersHorizontal,
   Inbox,
   HelpCircle,
@@ -20,11 +20,10 @@ export default function Header() {
 
   const [openMenu, setOpenMenu] = useState<"workspace" | "profile" | null>(null);
 
-  const workspaceName = "Ghost1469";
+  const workspaceName = user?.display_name ?? "…";
   const workspaceInitial = workspaceName.charAt(0).toUpperCase();
   const displayName = user?.display_name ?? "…";
   const email = user?.email ?? "";
-  const initial = displayName.charAt(0).toUpperCase();
 
   const onLogout = async () => {
     await logout();
@@ -65,7 +64,7 @@ export default function Header() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-gray-800">{workspaceName}</p>
-                  <p className="text-xs text-gray-400">Member · 2 Members</p>
+                  <p className="truncate text-xs text-gray-400">{email}</p>
                 </div>
                 <Check size={16} className="shrink-0 text-gray-500" />
               </div>

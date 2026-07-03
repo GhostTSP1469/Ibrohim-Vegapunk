@@ -1,310 +1,189 @@
-import { useState, useRef, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Link, NavLink, useParams } from "react-router-dom";
 import {
   Boxes,
   Component,
   Sparkles,
   Settings,
-  SquarePen,
   Home,
-  Pencil,
-  UserPlus,
-  StickyNote,
-  ChevronDown,
+  Users,
+  MessageSquare,
   ChevronRight,
+  ChevronDown,
+  Folder,
+  FolderOpen,
   Briefcase,
-  MoreHorizontal,
-  Flag,
-  SlidersHorizontal,
   PanelLeft,
-  Eye,
-  RefreshCw,
-  BarChart3,
-  Archive,
   LayoutDashboard,
-  Pin,
+  FileText,
   Circle,
   Tag,
+  RefreshCw,
   Layers,
-  MessageSquare,
-  Link2,
-  Activity,
-  Paperclip,
   Bell,
-  FileText,
-  FolderOpen,
-  Folder,
+  Eye,
+  StickyNote,
+  type LucideIcon,
 } from "lucide-react";
+import { useWorkspaceStore } from "../../pages/Workspace/WorkspaceZustand";
+import { useProjectsStore } from "../../pages/Projects/ProjectsZustand";
 
-/* ─── Icon Rail (left-most vertical strip) ─── */
 const railItems = [
   { icon: Boxes, label: "Projects", active: true },
   { icon: Component, label: "Wiki", active: false },
   { icon: Sparkles, label: "AI", active: false },
 ];
 
-/* ─── Top navigation ─── */
-const topNav = [
-  { icon: Home, label: "Home", active: true },
-  { icon: Pencil, label: "Drafts", active: false },
-  { icon: UserPlus, label: "Your work", active: false },
-  { icon: StickyNote, label: "Stickies", active: false },
-];
+const linkCls = ({ isActive }: { isActive: boolean }) =>
+  `flex items-center gap-2.5 rounded-lg px-3 py-2 text-[14px] font-medium transition-colors ${
+    isActive ? "bg-gray-100 text-gray-900" : "text-gray-600 hover:bg-gray-50"
+  }`;
 
-/* ─── "More" popover items (Workspace section) ─── */
-const moreItems = [
-  { icon: Eye, label: "Views" },
-  { icon: RefreshCw, label: "Cycles" },
-  { icon: BarChart3, label: "Analytics" },
-  { icon: Archive, label: "Archives" },
-  { icon: LayoutDashboard, label: "Dashboards" },
-];
+const fileCls = ({ isActive }: { isActive: boolean }) =>
+  `flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors ${
+    isActive ? "bg-brand-50 text-brand-700" : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+  }`;
 
-/* ─── Project files (sub-pages within each project folder) ─── */
-const projectFiles = [
-  { icon: FileText, label: "Issues" },
-  { icon: Circle, label: "States" },
-  { icon: Tag, label: "Labels" },
-  { icon: RefreshCw, label: "Cycles" },
-  { icon: Layers, label: "Modules" },
-  { icon: MessageSquare, label: "Comments" },
-  { icon: Link2, label: "Relations" },
-  { icon: Activity, label: "Activity" },
-  { icon: Paperclip, label: "Attachments" },
-  { icon: Bell, label: "Notifications" },
-];
+function projectFiles(slug: string, pid: string): { icon: LucideIcon; label: string; to: string }[] {
+  const base = `/w/${slug}/projects/${pid}`;
+  return [
+    { icon: LayoutDashboard, label: "Overview", to: `${base}/overview` },
+    { icon: FileText, label: "Issues", to: `${base}/issues` },
+    { icon: Circle, label: "States", to: `${base}/states` },
+    { icon: Tag, label: "Labels", to: `${base}/labels` },
+    { icon: RefreshCw, label: "Cycles", to: `${base}/cycles` },
+    { icon: Layers, label: "Modules", to: `${base}/modules` },
+    { icon: Eye, label: "Views", to: `${base}/views` },
+    { icon: StickyNote, label: "Pages", to: `${base}/pages` },
+  ];
+}
 
 export default function Sidebar() {
+  const { workspaceSlug = "", projectId = "" } = useParams();
+  const { workspaces, fetchWorkspaces } = useWorkspaceStore();
+  const { projects, fetchProjects } = useProjectsStore();
+
+  const [panelOpen, setPanelOpen] = useState(true);
   const [workspaceOpen, setWorkspaceOpen] = useState(true);
   const [projectsOpen, setProjectsOpen] = useState(true);
-  const [panelOpen, setPanelOpen] = useState(true);
-  const [moreOpen, setMoreOpen] = useState(false);
-  const [ghostFolderOpen, setGhostFolderOpen] = useState(false);
+  const [openFolder, setOpenFolder] = useState<string | null>(null);
 
-  // Close "More" popover when clicking outside
-  const moreRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
-        setMoreOpen(false);
-      }
-    }
-    if (moreOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [moreOpen]);
+    void fetchWorkspaces();
+  }, [fetchWorkspaces]);
+
+  useEffect(() => {
+    if (workspaceSlug) void fetchProjects(workspaceSlug);
+  }, [workspaceSlug, fetchProjects]);
+
+  useEffect(() => {
+    if (projectId) setOpenFolder(projectId);
+  }, [projectId]);
 
   return (
-    <div className="flex h-screen bg-white font-sans text-[15px] text-gray-800">
-      {/* ───── Icon Rail ───── */}
-      <div className="relative flex w-16 flex-shrink-0 flex-col items-center justify-between border-r border-gray-100 py-4">
+    <div className="flex h-full bg-white font-sans text-[15px] text-gray-800">
+      {/* ── Icon rail ── */}
+      <div className="relative flex w-16 shrink-0 flex-col items-center justify-between border-r border-gray-100 py-4">
         {!panelOpen && (
           <button
             onClick={() => setPanelOpen(true)}
-            className="absolute -right-3 top-4 z-10 flex h-6 w-6 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-400 shadow-sm transition-colors hover:text-gray-700"
+            className="absolute -right-3 top-4 z-10 flex h-6 w-6 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-400 shadow-sm hover:text-gray-700"
           >
             <PanelLeft size={14} />
           </button>
         )}
-
         <div className="flex flex-col items-center gap-1">
           {railItems.map(({ icon: Icon, label, active }) => (
-            <button
-              key={label}
-              className="group flex flex-col items-center gap-1 rounded-lg px-2 py-2 transition-colors"
-            >
+            <div key={label} className="flex flex-col items-center gap-1 px-2 py-2">
               <div
-                className={`flex h-9 w-9 items-center justify-center rounded-lg transition-all ${
-                  active
-                    ? "bg-gray-900 text-white shadow-sm"
-                    : "text-gray-400 group-hover:bg-gray-100 group-hover:text-gray-700"
+                className={`flex h-9 w-9 items-center justify-center rounded-lg ${
+                  active ? "bg-gray-900 text-white shadow-sm" : "text-gray-400"
                 }`}
               >
                 <Icon size={17} strokeWidth={2} />
               </div>
-              <span
-                className={`text-[11px] font-medium ${
-                  active ? "text-gray-900" : "text-gray-400"
-                }`}
-              >
-                {label}
-              </span>
-            </button>
+              <span className={`text-[11px] font-medium ${active ? "text-gray-900" : "text-gray-400"}`}>{label}</span>
+            </div>
           ))}
         </div>
-
-        <button className="flex flex-col items-center gap-1 rounded-lg px-2 py-2 text-gray-400 transition-colors hover:text-gray-700">
+        <Link to="/settings" className="flex flex-col items-center gap-1 px-2 py-2 text-gray-400 hover:text-gray-700">
           <Settings size={18} />
           <span className="text-[11px] font-medium">Settings</span>
-        </button>
+        </Link>
       </div>
 
-      {/* ───── Collapsible Panel ───── */}
+      {/* ── Collapsible panel ── */}
       <div
-        className="overflow-hidden border-r border-gray-100 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
-        style={{ width: panelOpen ? "288px" : "0px" }}
+        className="overflow-hidden border-r border-gray-100 transition-all duration-300"
+        style={{ width: panelOpen ? "272px" : "0px" }}
       >
-        <div className="flex h-full w-72 flex-col">
-          {/* Header */}
+        <div className="flex h-full w-68 flex-col">
           <div className="flex items-center justify-between px-4 pt-4">
-            <span className="text-[15px] font-semibold text-gray-900">
-              Projects
-            </span>
-            <div className="flex items-center gap-1 text-gray-400">
-              <button className="rounded-md p-1.5 transition-colors hover:bg-gray-100 hover:text-gray-700">
-                <SlidersHorizontal size={16} />
-              </button>
-              <button
-                onClick={() => setPanelOpen(false)}
-                className="rounded-md p-1.5 transition-colors hover:bg-gray-100 hover:text-gray-700"
-              >
-                <PanelLeft size={16} />
-              </button>
-            </div>
-          </div>
-
-          {/* New work item */}
-          <div className="px-4 pt-3">
-            <button className="flex w-full items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-gray-500 transition-colors hover:border-gray-300 hover:bg-gray-50">
-              <SquarePen size={16} />
-              <span className="text-[14px]">New work item</span>
+            <span className="text-[15px] font-semibold text-gray-900">Workspace</span>
+            <button onClick={() => setPanelOpen(false)} className="rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700">
+              <PanelLeft size={16} />
             </button>
           </div>
 
-          {/* Top nav */}
+          {/* Top nav (global) */}
           <div className="flex flex-col gap-0.5 px-2 pt-3">
-            {topNav.map(({ icon: Icon, label, active }) => (
-              <button
-                key={label}
-                className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors ${
-                  active
-                    ? "bg-gray-100 text-gray-900"
-                    : "text-gray-600 hover:bg-gray-50"
-                }`}
-              >
-                <Icon size={16} strokeWidth={2} />
-                <span className="text-[14px] font-medium">{label}</span>
-              </button>
-            ))}
+            <NavLink to="/" end className={linkCls}>
+              <Home size={16} /> <span>Workspaces</span>
+            </NavLink>
+            <NavLink to="/friends" className={linkCls}>
+              <Users size={16} /> <span>Friends</span>
+            </NavLink>
+            <NavLink to="/messages" className={linkCls}>
+              <MessageSquare size={16} /> <span>Messages</span>
+            </NavLink>
           </div>
 
-          <div className="mt-4 flex-1 overflow-y-auto px-2">
-            {/* ───── Workspace accordion ───── */}
-            <AccordionSection
-              title="Workspace"
-              open={workspaceOpen}
-              onToggle={() => setWorkspaceOpen((v) => !v)}
-            >
-              <button className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-gray-600 transition-colors hover:bg-gray-50">
-                <Briefcase size={16} />
-                <span className="text-[14px] font-medium">Projects</span>
-              </button>
+          <div className="mt-3 flex-1 overflow-y-auto px-2">
+            {/* Workspaces */}
+            <Accordion title="Workspaces" open={workspaceOpen} onToggle={() => setWorkspaceOpen((v) => !v)}>
+              {workspaces.map((w) => (
+                <NavLink key={w.id} to={`/w/${w.slug}/projects`} className={linkCls}>
+                  <Briefcase size={16} />
+                  <span className="truncate">{w.name}</span>
+                </NavLink>
+              ))}
+              {workspaces.length === 0 && <p className="px-3 py-1 text-[13px] text-gray-400">No workspaces</p>}
+            </Accordion>
 
-              {/* "More" button with popover */}
-              <div className="relative" ref={moreRef}>
-                <button
-                  onClick={() => setMoreOpen((v) => !v)}
-                  className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors ${
-                    moreOpen
-                      ? "bg-gray-100 text-gray-900"
-                      : "text-gray-600 hover:bg-gray-50"
-                  }`}
-                >
-                  <MoreHorizontal size={16} />
-                  <span className="text-[14px] font-medium">Hide</span>
-                </button>
-
-                {/* ── Popover: Views, Cycles, Analytics, Archives, Dashboards ── */}
-                {moreOpen && (
-                  <div className="absolute left-full top-0 z-50 ml-2 w-52 animate-in fade-in slide-in-from-left-1 rounded-xl border border-gray-200 bg-white py-1.5 shadow-lg">
-                    {moreItems.map(({ icon: Icon, label }) => (
+            {/* Projects of the active workspace */}
+            {workspaceSlug && (
+              <Accordion title="Projects" open={projectsOpen} onToggle={() => setProjectsOpen((v) => !v)}>
+                <NavLink to={`/w/${workspaceSlug}/notifications`} className={linkCls}>
+                  <Bell size={16} /> <span>Notifications</span>
+                </NavLink>
+                {projects.map((p) => {
+                  const isOpen = openFolder === p.id;
+                  return (
+                    <div key={p.id}>
                       <button
-                        key={label}
-                        className="flex w-full items-center justify-between px-3 py-2 text-left text-[14px] text-gray-700 transition-colors hover:bg-gray-50"
+                        onClick={() => setOpenFolder(isOpen ? null : p.id)}
+                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-gray-600 hover:bg-gray-50"
                       >
-                        <span className="flex items-center gap-2.5">
-                          <Icon size={16} className="text-gray-400" />
-                          <span className="font-medium">{label}</span>
-                        </span>
-                        <Pin
-                          size={14}
-                          className="text-gray-300 transition-colors hover:text-gray-500"
-                        />
+                        <ChevronRight size={14} className={`text-gray-400 transition-transform ${isOpen ? "rotate-90" : ""}`} />
+                        {isOpen ? <FolderOpen size={16} className="text-yellow-500" /> : <Folder size={16} className="text-yellow-500" />}
+                        <span className="truncate text-[14px] font-medium">{p.name}</span>
+                        <span className="ml-auto rounded bg-gray-100 px-1 text-[10px] font-semibold text-gray-500">{p.identifier}</span>
                       </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </AccordionSection>
-
-            {/* ───── Projects accordion (folder → files) ───── */}
-            <AccordionSection
-              title="Projects"
-              open={projectsOpen}
-              onToggle={() => setProjectsOpen((v) => !v)}
-            >
-              {/* Ghost1469 project folder */}
-              <div>
-                <button
-                  onClick={() => setGhostFolderOpen((v) => !v)}
-                  className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-gray-600 transition-colors hover:bg-gray-50"
-                >
-                  <span className="flex items-center gap-2">
-                    {/* Folder chevron */}
-                    <ChevronRight
-                      size={14}
-                      className={`text-gray-400 transition-transform duration-200 ${
-                        ghostFolderOpen ? "rotate-90" : ""
-                      }`}
-                    />
-                    {/* Folder icon */}
-                    {ghostFolderOpen ? (
-                      <FolderOpen
-                        size={16}
-                        className="text-yellow-500"
-                      />
-                    ) : (
-                      <Folder
-                        size={16}
-                        className="text-yellow-500"
-                      />
-                    )}
-                    <span className="text-[14px] font-medium">Ghost1469</span>
-                  </span>
-                  <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
-                </button>
-
-                {/* Project files (sub-pages) */}
-                <div
-                  className="grid transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
-                  style={{
-                    gridTemplateRows: ghostFolderOpen ? "1fr" : "0fr",
-                    opacity: ghostFolderOpen ? 1 : 0,
-                  }}
-                >
-                  <div className="overflow-hidden">
-                    <div className="ml-5 flex flex-col gap-0.5 border-l border-gray-200 pl-2 pt-0.5">
-                      {projectFiles.map(({ icon: FileIcon, label }) => (
-                        <button
-                          key={label}
-                          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-1.5 text-left text-[13px] font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-700"
-                        >
-                          <FileIcon size={14} strokeWidth={2} />
-                          <span>{label}</span>
-                        </button>
-                      ))}
+                      {isOpen && (
+                        <div className="ml-5 flex flex-col gap-0.5 border-l border-gray-200 pl-2 pt-0.5">
+                          {projectFiles(workspaceSlug, p.id).map(({ icon: Icon, label, to }) => (
+                            <NavLink key={label} to={to} className={fileCls}>
+                              <Icon size={14} strokeWidth={2} /> <span>{label}</span>
+                            </NavLink>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                </div>
-              </div>
-            </AccordionSection>
-          </div>
-
-          {/* Trial banner */}
-          <div className="border-t border-gray-100 p-3">
-            <button className="w-full rounded-lg bg-gray-50 px-3 py-2 text-center text-[13px] font-medium text-gray-600 transition-colors hover:bg-gray-100">
-              Business trial ends in 12d
-            </button>
+                  );
+                })}
+                {projects.length === 0 && <p className="px-3 py-1 text-[13px] text-gray-400">No projects</p>}
+              </Accordion>
+            )}
           </div>
         </div>
       </div>
@@ -312,8 +191,7 @@ export default function Sidebar() {
   );
 }
 
-/* ─── Reusable accordion section ─── */
-function AccordionSection({
+function Accordion({
   title,
   open,
   onToggle,
@@ -328,30 +206,12 @@ function AccordionSection({
     <div className="mb-1">
       <button
         onClick={onToggle}
-        className="flex w-full items-center justify-between rounded-lg px-3 py-1.5 text-left transition-colors hover:bg-gray-50"
+        className="flex w-full items-center justify-between rounded-lg px-3 py-1.5 text-left hover:bg-gray-50"
       >
-        <span className="text-[12px] font-semibold uppercase tracking-wide text-gray-400">
-          {title}
-        </span>
-        <ChevronDown
-          size={14}
-          className={`text-gray-400 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-            open ? "rotate-0" : "-rotate-90"
-          }`}
-        />
+        <span className="text-[12px] font-semibold uppercase tracking-wide text-gray-400">{title}</span>
+        <ChevronDown size={14} className={`text-gray-400 transition-transform ${open ? "rotate-0" : "-rotate-90"}`} />
       </button>
-
-      <div
-        className="grid transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
-        style={{
-          gridTemplateRows: open ? "1fr" : "0fr",
-          opacity: open ? 1 : 0,
-        }}
-      >
-        <div className="overflow-hidden">
-          <div className="flex flex-col gap-0.5 pt-0.5">{children}</div>
-        </div>
-      </div>
+      {open && <div className="flex flex-col gap-0.5 pt-0.5">{children}</div>}
     </div>
   );
 }

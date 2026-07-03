@@ -1,25 +1,21 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useParams } from "react-router-dom";
+import { Plus, Pencil, Trash2, RefreshCw, CalendarDays } from "lucide-react";
 import { useCyclesStore, type Cycle } from "./CyclesZustand";
 import { toIsoDate } from "../../api";
-
-const input =
-  "rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-brand-500";
-const btn =
-  "rounded-lg bg-brand-600 px-3 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50";
+import { PageHeader, EmptyState, ErrorBanner, field, primaryBtn, ghostBtn, card } from "../../components/ui/kit";
 
 export default function Cycles() {
   const { workspaceSlug = "", projectId = "" } = useParams();
-  const { cycles, loading, error, fetchCycles, createCycle, updateCycle, deleteCycle } =
-    useCyclesStore();
+  const { cycles, loading, error, fetchCycles, createCycle, updateCycle, deleteCycle } = useCyclesStore();
   const [name, setName] = useState("");
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
 
   const [editId, setEditId] = useState<string | null>(null);
-  const [editName, setEditName] = useState("");
-  const [editStart, setEditStart] = useState("");
-  const [editEnd, setEditEnd] = useState("");
+  const [eName, setEName] = useState("");
+  const [eStart, setEStart] = useState("");
+  const [eEnd, setEEnd] = useState("");
 
   useEffect(() => {
     void fetchCycles(workspaceSlug, projectId);
@@ -27,74 +23,65 @@ export default function Cycles() {
 
   const onCreate = async (e: FormEvent) => {
     e.preventDefault();
-    const ok = await createCycle(workspaceSlug, projectId, {
-      name,
-      start_date: toIsoDate(start),
-      end_date: toIsoDate(end),
-    });
-    if (ok) {
-      setName("");
-      setStart("");
-      setEnd("");
-    }
+    const ok = await createCycle(workspaceSlug, projectId, { name, start_date: toIsoDate(start), end_date: toIsoDate(end) });
+    if (ok) { setName(""); setStart(""); setEnd(""); }
   };
-
   const startEdit = (c: Cycle) => {
     setEditId(c.id);
-    setEditName(c.name);
-    setEditStart(c.start_date ? c.start_date.slice(0, 10) : "");
-    setEditEnd(c.end_date ? c.end_date.slice(0, 10) : "");
+    setEName(c.name);
+    setEStart(c.start_date ? c.start_date.slice(0, 10) : "");
+    setEEnd(c.end_date ? c.end_date.slice(0, 10) : "");
   };
-
   const onSaveEdit = async (e: FormEvent, id: string) => {
     e.preventDefault();
-    const ok = await updateCycle(workspaceSlug, projectId, id, {
-      name: editName,
-      start_date: toIsoDate(editStart),
-      end_date: toIsoDate(editEnd),
-    });
-    if (ok) setEditId(null);
+    if (await updateCycle(workspaceSlug, projectId, id, { name: eName, start_date: toIsoDate(eStart), end_date: toIsoDate(eEnd) })) setEditId(null);
   };
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-xl font-semibold text-gray-800">Cycles</h1>
-      {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
+    <div className="space-y-5">
+      <PageHeader title="Cycles" count={cycles.length} subtitle="Time-boxed sprints for planning work." />
+      <ErrorBanner error={error} />
 
-      <form onSubmit={onCreate} className="flex flex-wrap items-center gap-2 rounded-xl border border-gray-200 bg-white p-3">
-        <input className={input + " flex-1"} placeholder="Cycle name" value={name} onChange={(e) => setName(e.target.value)} required />
-        <input type="date" className={input} value={start} onChange={(e) => setStart(e.target.value)} />
-        <input type="date" className={input} value={end} onChange={(e) => setEnd(e.target.value)} />
-        <button className={btn} disabled={loading}>Create</button>
+      <form onSubmit={onCreate} className={`flex flex-wrap items-center gap-2 p-3 ${card}`}>
+        <input className={field + " flex-1"} placeholder="Cycle name" value={name} onChange={(e) => setName(e.target.value)} required />
+        <input type="date" className={field + " w-40"} value={start} onChange={(e) => setStart(e.target.value)} />
+        <input type="date" className={field + " w-40"} value={end} onChange={(e) => setEnd(e.target.value)} />
+        <button className={primaryBtn} disabled={loading}><Plus size={16} /> Add</button>
       </form>
 
-      <ul className="space-y-2">
-        {cycles.map((c) =>
-          editId === c.id ? (
-            <li key={c.id}>
-              <form onSubmit={(e) => onSaveEdit(e, c.id)} className="flex flex-wrap items-center gap-2 rounded-lg border border-brand-300 bg-white px-3 py-2">
-                <input className={input + " flex-1"} value={editName} onChange={(e) => setEditName(e.target.value)} required />
-                <input type="date" className={input} value={editStart} onChange={(e) => setEditStart(e.target.value)} />
-                <input type="date" className={input} value={editEnd} onChange={(e) => setEditEnd(e.target.value)} />
-                <button className={btn} disabled={loading}>Save</button>
-                <button type="button" onClick={() => setEditId(null)} className="text-sm text-gray-500 hover:underline">Cancel</button>
+      {cycles.length === 0 && !loading ? (
+        <EmptyState icon={<RefreshCw size={28} />} text="No cycles yet." />
+      ) : (
+        <div className={`divide-y divide-gray-100 ${card}`}>
+          {cycles.map((c) =>
+            editId === c.id ? (
+              <form key={c.id} onSubmit={(e) => onSaveEdit(e, c.id)} className="flex flex-wrap items-center gap-2 p-3">
+                <input className={field + " flex-1"} value={eName} onChange={(e) => setEName(e.target.value)} required />
+                <input type="date" className={field + " w-40"} value={eStart} onChange={(e) => setEStart(e.target.value)} />
+                <input type="date" className={field + " w-40"} value={eEnd} onChange={(e) => setEEnd(e.target.value)} />
+                <button className={primaryBtn} disabled={loading}>Save</button>
+                <button type="button" onClick={() => setEditId(null)} className={ghostBtn}>Cancel</button>
               </form>
-            </li>
-          ) : (
-            <li key={c.id} className="flex items-center justify-between rounded-lg border bg-white px-3 py-2">
-              <span>
-                <span className="font-medium">{c.name}</span>
-                {c.start_date && <span className="ml-2 text-xs text-gray-400">{c.start_date.slice(0, 10)} → {c.end_date?.slice(0, 10)}</span>}
-              </span>
-              <span className="flex gap-3">
-                <button onClick={() => startEdit(c)} className="text-sm text-brand-600 hover:underline">Edit</button>
-                <button onClick={() => deleteCycle(workspaceSlug, projectId, c.id)} className="text-sm text-red-600 hover:underline">Delete</button>
-              </span>
-            </li>
-          ),
-        )}
-        {!loading && cycles.length === 0 && <li className="text-gray-400">No cycles yet.</li>}
-      </ul>
+            ) : (
+              <div key={c.id} className="group flex items-center justify-between px-4 py-3 hover:bg-gray-50">
+                <span className="flex items-center gap-3">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 text-brand-600"><RefreshCw size={15} /></span>
+                  <span>
+                    <span className="block text-sm font-medium text-gray-800">{c.name}</span>
+                    {c.start_date && (
+                      <span className="flex items-center gap-1 text-xs text-gray-400"><CalendarDays size={12} /> {c.start_date.slice(0, 10)} → {c.end_date?.slice(0, 10)}</span>
+                    )}
+                  </span>
+                </span>
+                <span className="flex gap-1 opacity-0 transition group-hover:opacity-100">
+                  <button onClick={() => startEdit(c)} className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-brand-600"><Pencil size={15} /></button>
+                  <button onClick={() => deleteCycle(workspaceSlug, projectId, c.id)} className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-red-600"><Trash2 size={15} /></button>
+                </span>
+              </div>
+            ),
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,22 +1,18 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useParams } from "react-router-dom";
+import { Plus, Pencil, Trash2, Tag } from "lucide-react";
 import { useLabelsStore, type Label } from "./LabelsZustand";
-
-const input =
-  "rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-brand-500";
-const btn =
-  "rounded-lg bg-brand-600 px-3 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50";
+import { PageHeader, EmptyState, ErrorBanner, field, primaryBtn, ghostBtn, card } from "../../components/ui/kit";
 
 export default function Labels() {
   const { workspaceSlug = "", projectId = "" } = useParams();
-  const { labels, loading, error, fetchLabels, createLabel, updateLabel, deleteLabel } =
-    useLabelsStore();
+  const { labels, loading, error, fetchLabels, createLabel, updateLabel, deleteLabel } = useLabelsStore();
   const [name, setName] = useState("");
   const [color, setColor] = useState("#3f76ff");
 
   const [editId, setEditId] = useState<string | null>(null);
-  const [editName, setEditName] = useState("");
-  const [editColor, setEditColor] = useState("#3f76ff");
+  const [eName, setEName] = useState("");
+  const [eColor, setEColor] = useState("#3f76ff");
 
   useEffect(() => {
     void fetchLabels(workspaceSlug, projectId);
@@ -26,57 +22,52 @@ export default function Labels() {
     e.preventDefault();
     if (await createLabel(workspaceSlug, projectId, { name, color })) setName("");
   };
-
   const startEdit = (l: Label) => {
     setEditId(l.id);
-    setEditName(l.name);
-    setEditColor(l.color);
+    setEName(l.name);
+    setEColor(l.color);
   };
-
   const onSaveEdit = async (e: FormEvent, id: string) => {
     e.preventDefault();
-    if (await updateLabel(workspaceSlug, projectId, id, { name: editName, color: editColor })) {
-      setEditId(null);
-    }
+    if (await updateLabel(workspaceSlug, projectId, id, { name: eName, color: eColor })) setEditId(null);
   };
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-xl font-semibold text-gray-800">Labels</h1>
-      {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
+    <div className="space-y-5">
+      <PageHeader title="Labels" count={labels.length} subtitle="Tag issues to organize and filter them." />
+      <ErrorBanner error={error} />
 
-      <form onSubmit={onCreate} className="flex flex-wrap items-center gap-2 rounded-xl border border-gray-200 bg-white p-3">
-        <input className={input + " flex-1"} placeholder="Label name" value={name} onChange={(e) => setName(e.target.value)} required />
-        <input type="color" value={color} onChange={(e) => setColor(e.target.value)} className="h-9 w-12 rounded border" />
-        <button className={btn} disabled={loading}>Create</button>
+      <form onSubmit={onCreate} className={`flex flex-wrap items-center gap-2 p-3 ${card}`}>
+        <input className={field + " flex-1"} placeholder="Label name" value={name} onChange={(e) => setName(e.target.value)} required />
+        <input type="color" value={color} onChange={(e) => setColor(e.target.value)} className="h-9 w-10 cursor-pointer rounded border border-gray-200" />
+        <button className={primaryBtn} disabled={loading}><Plus size={16} /> Add</button>
       </form>
 
-      <ul className="space-y-2">
-        {labels.map((l) =>
-          editId === l.id ? (
-            <li key={l.id}>
-              <form onSubmit={(e) => onSaveEdit(e, l.id)} className="flex flex-wrap items-center gap-2 rounded-lg border border-brand-300 bg-white px-3 py-2">
-                <input className={input + " flex-1"} value={editName} onChange={(e) => setEditName(e.target.value)} required />
-                <input type="color" value={editColor} onChange={(e) => setEditColor(e.target.value)} className="h-9 w-12 rounded border" />
-                <button className={btn} disabled={loading}>Save</button>
-                <button type="button" onClick={() => setEditId(null)} className="text-sm text-gray-500 hover:underline">Cancel</button>
+      {labels.length === 0 && !loading ? (
+        <EmptyState icon={<Tag size={28} />} text="No labels yet." />
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {labels.map((l) =>
+            editId === l.id ? (
+              <form key={l.id} onSubmit={(e) => onSaveEdit(e, l.id)} className={`flex items-center gap-2 p-2 ${card}`}>
+                <input className={field + " w-40"} value={eName} onChange={(e) => setEName(e.target.value)} required />
+                <input type="color" value={eColor} onChange={(e) => setEColor(e.target.value)} className="h-8 w-9 rounded border border-gray-200" />
+                <button className={primaryBtn} disabled={loading}>Save</button>
+                <button type="button" onClick={() => setEditId(null)} className={ghostBtn}>Cancel</button>
               </form>
-            </li>
-          ) : (
-            <li key={l.id} className="flex items-center justify-between rounded-lg border bg-white px-3 py-2">
-              <span className="flex items-center gap-2 text-sm">
-                <span className="h-3 w-3 rounded-full" style={{ background: l.color }} />
-                {l.name}
+            ) : (
+              <span key={l.id} className="group inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white py-1.5 pl-3 pr-2 text-sm shadow-sm">
+                <span className="h-2.5 w-2.5 rounded-full" style={{ background: l.color }} />
+                <span className="font-medium text-gray-700">{l.name}</span>
+                <span className="ml-1 flex gap-0.5 opacity-0 transition group-hover:opacity-100">
+                  <button onClick={() => startEdit(l)} className="rounded p-1 text-gray-400 hover:text-brand-600"><Pencil size={13} /></button>
+                  <button onClick={() => deleteLabel(workspaceSlug, projectId, l.id)} className="rounded p-1 text-gray-400 hover:text-red-600"><Trash2 size={13} /></button>
+                </span>
               </span>
-              <span className="flex gap-3">
-                <button onClick={() => startEdit(l)} className="text-sm text-brand-600 hover:underline">Edit</button>
-                <button onClick={() => deleteLabel(workspaceSlug, projectId, l.id)} className="text-sm text-red-600 hover:underline">Delete</button>
-              </span>
-            </li>
-          ),
-        )}
-        {!loading && labels.length === 0 && <li className="text-gray-400">No labels yet.</li>}
-      </ul>
+            ),
+          )}
+        </div>
+      )}
     </div>
   );
 }
