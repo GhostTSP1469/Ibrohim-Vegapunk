@@ -1,10 +1,28 @@
 import type { PrismaClient } from '@prisma/client';
+import { AppError } from '../../lib/errors.js';
 import type { UserSearchQuery } from './schema.js';
 
 export interface PublicUser {
   id: string;
   display_name: string;
   avatar_url: string | null;
+}
+
+/**
+ * Find a single active user by exact email (case-insensitive). Used by the
+ * "add member" flow: the client enters an email, we resolve it to a user the
+ * caller can then add. Returns email too (the caller already supplied it).
+ */
+export async function lookupByEmail(
+  prisma: PrismaClient,
+  email: string,
+): Promise<PublicUser & { email: string }> {
+  const user = await prisma.user.findFirst({
+    where: { email: { equals: email, mode: 'insensitive' }, is_active: true },
+    select: { id: true, display_name: true, avatar_url: true, email: true },
+  });
+  if (!user) throw AppError.notFound('No user found with that email');
+  return user;
 }
 
 /**

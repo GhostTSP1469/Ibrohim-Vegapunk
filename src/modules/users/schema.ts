@@ -10,6 +10,11 @@ export const UserSearchQuerySchema = z.object({
 
 export type UserSearchQuery = z.infer<typeof UserSearchQuerySchema>;
 
+export const LookupQuerySchema = z.object({
+  email: z.string().trim().email(),
+});
+export type LookupQuery = z.infer<typeof LookupQuerySchema>;
+
 // ─── Fastify route schemas ────────────────────────────────────────────────────
 
 const security = [{ bearerAuth: [] }];
@@ -23,6 +28,28 @@ const publicUserShape = {
     avatar_url: { type: 'string', nullable: true },
   },
 } as const;
+
+export const lookupUserSchema: FastifySchema = {
+  tags: ['Users'],
+  summary: 'Find a user by exact email (to add as a project/workspace member)',
+  security,
+  querystring: {
+    type: 'object',
+    required: ['email'],
+    properties: { email: { type: 'string', format: 'email' } },
+  },
+  response: {
+    200: {
+      type: 'object',
+      properties: {
+        id: { type: 'string' },
+        display_name: { type: 'string' },
+        avatar_url: { type: 'string', nullable: true },
+        email: { type: 'string' },
+      },
+    },
+  },
+};
 
 export const searchUsersSchema: FastifySchema = {
   tags: ['Users'],

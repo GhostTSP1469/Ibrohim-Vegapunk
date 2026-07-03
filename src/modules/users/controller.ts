@@ -1,6 +1,15 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import * as userService from './service.js';
-import { UserSearchQuerySchema } from './schema.js';
+import { UserSearchQuerySchema, LookupQuerySchema } from './schema.js';
+
+export async function lookupUserHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+): Promise<void> {
+  const { email } = LookupQuerySchema.parse(request.query);
+  const user = await userService.lookupByEmail(request.server.prisma, email);
+  reply.send(user);
+}
 
 export async function searchUsersHandler(
   request: FastifyRequest,
