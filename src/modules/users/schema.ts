@@ -2,10 +2,10 @@ import { z } from 'zod';
 import type { FastifySchema } from 'fastify';
 
 export const UserSearchQuerySchema = z.object({
-  /** Case-insensitive partial match on display_name. */
-  query: z.string().trim().min(1, 'query is required'),
+  /** Case-insensitive partial match on display_name. Omit to list everyone. */
+  query: z.string().trim().min(1).optional(),
   cursor: z.string().optional(),
-  limit: z.coerce.number().int().min(1).max(50).default(20),
+  limit: z.coerce.number().int().min(1).max(100).default(30),
 });
 
 export type UserSearchQuery = z.infer<typeof UserSearchQuerySchema>;
@@ -30,11 +30,10 @@ export const searchUsersSchema: FastifySchema = {
   security,
   querystring: {
     type: 'object',
-    required: ['query'],
     properties: {
-      query: { type: 'string', minLength: 1 },
+      query: { type: 'string' },
       cursor: { type: 'string' },
-      limit: { type: 'integer', minimum: 1, maximum: 50, default: 20 },
+      limit: { type: 'integer', minimum: 1, maximum: 100, default: 30 },
     },
   },
   response: {

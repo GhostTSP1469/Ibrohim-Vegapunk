@@ -23,7 +23,9 @@ export async function searchUsers(
     where: {
       id: { not: currentUserId },
       is_active: true,
-      display_name: { contains: query.query, mode: 'insensitive' },
+      // With no query this lists everyone (for a "people you may know" panel);
+      // with a query it filters by display name.
+      ...(query.query ? { display_name: { contains: query.query, mode: 'insensitive' } } : {}),
     },
     select: { id: true, display_name: true, avatar_url: true },
     orderBy: [{ display_name: 'asc' }, { id: 'asc' }],
