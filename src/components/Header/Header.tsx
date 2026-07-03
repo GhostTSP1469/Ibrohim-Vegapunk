@@ -6,7 +6,7 @@ import {
   Settings,
   Plus,
   Mail,
-  LogOut,
+   LogOut,
   SlidersHorizontal,
   Inbox,
   HelpCircle,
