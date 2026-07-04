@@ -1,17 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  ChevronDown,
-  Check,
-  Settings,
-  Plus,
-  Mail,
-   LogOut,
-  SlidersHorizontal,
-  Inbox,
-  HelpCircle,
-  Shapes,
-} from "lucide-react";
+import { LogOut, SlidersHorizontal, Inbox, HelpCircle, Shapes, Waypoints, Search, Settings } from "lucide-react";
 import { useAuthStore } from "../../pages/Auth/AuthZustand";
 import { useWorkspaceStore } from "../../pages/Workspace/WorkspaceZustand";
 import { useNotificationsStore } from "../../pages/Notifications/NotificationsZustand";
@@ -22,17 +11,15 @@ export default function Header() {
   const unreadCount = useNotificationsStore((s) => s.unreadCount);
   const navigate = useNavigate();
 
+  const [openMenu, setOpenMenu] = useState<"workspace" | "profile" | null>(null);
+
+  const displayName = user?.display_name ?? "…";
+  const email = user?.email ?? "";
+
   const goNotifications = () => {
     const ws = workspaces[0];
     navigate(ws ? `/w/${ws.slug}/notifications` : "/");
   };
-
-  const [openMenu, setOpenMenu] = useState<"workspace" | "profile" | null>(null);
-
-  const workspaceName = user?.display_name ?? "…";
-  const workspaceInitial = workspaceName.charAt(0).toUpperCase();
-  const displayName = user?.display_name ?? "…";
-  const email = user?.email ?? "";
 
   const onLogout = async () => {
     await logout();
@@ -43,79 +30,20 @@ export default function Header() {
 
   return (
     <header className="relative z-30 flex h-14 shrink-0 items-center justify-between border-b border-gray-200 bg-white px-4">
-      {/* Left: workspace switcher */}
-      <div className="relative">
-        <button
-          onClick={() => setOpenMenu((m) => (m === "workspace" ? null : "workspace"))}
-          className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-gray-100"
-        >
-          <div className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-600 text-xs font-semibold text-white">
-            {workspaceInitial}
-          </div>
-          <span className="text-sm font-semibold text-gray-800">{workspaceName}</span>
-          <ChevronDown
-            size={15}
-            className={`text-gray-400 transition-transform duration-200 ${
-              openMenu === "workspace" ? "rotate-180" : ""
-            }`}
+      {/* Left: brand + search */}
+      <div className="flex items-center gap-3">
+        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-400 via-emerald-500 to-indigo-600 shadow-lg shadow-emerald-500/25">
+          <Waypoints size={15} className="text-white" strokeWidth={2.4} />
+        </div>
+        <div className="group flex w-72 items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 transition-colors duration-200 hover:border-gray-300 focus-within:border-emerald-400 focus-within:ring-1 focus-within:ring-emerald-400">
+          <Search size={15} className="shrink-0 text-gray-400 transition-colors duration-200 group-focus-within:text-emerald-500" />
+          <input
+            type="text"
+            placeholder="Search..."
+            className="w-full bg-transparent text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none"
           />
-        </button>
-
-        {openMenu === "workspace" && (
-          <>
-            <div className="fixed inset-0 z-10" onClick={() => setOpenMenu(null)} />
-            <div className="absolute left-0 top-11 z-20 w-80 rounded-xl border border-gray-200 bg-white p-1.5 shadow-xl">
-              <div className="px-3 pb-2 pt-1.5">
-                <p className="truncate text-xs text-gray-400">{email}</p>
-              </div>
-
-              <div className="flex items-center gap-3 rounded-lg bg-gray-50 px-3 py-2.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-blue-600 text-sm font-semibold text-white">
-                  {workspaceInitial}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-gray-800">{workspaceName}</p>
-                  <p className="truncate text-xs text-gray-400">{email}</p>
-                </div>
-                <Check size={16} className="shrink-0 text-gray-500" />
-              </div>
-
-              <div className="px-3 pb-1 pt-2">
-                <button
-                  onClick={() => {
-                    setOpenMenu(null);
-                    navigate("/settings");
-                  }}
-                  className="flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
-                >
-                  <Settings size={15} />
-                  Settings
-                </button>
-              </div>
-
-              <div className="my-1 border-t border-gray-100" />
-
-              <button className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50">
-                <Plus size={16} className="text-gray-400" />
-                Create workspace
-              </button>
-              <button className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50">
-                <Mail size={16} className="text-gray-400" />
-                Workspace invites
-              </button>
-
-              <div className="my-1 border-t border-gray-100" />
-
-              <button
-                onClick={onLogout}
-                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
-              >
-                <LogOut size={16} />
-                Sign out
-              </button>
-            </div>
-          </>
-        )}
+          <kbd className="shrink-0 rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-[10px] font-medium text-gray-400">⌘</kbd>
+        </div>
       </div>
 
       {/* Right: utility icons + profile */}
@@ -169,20 +97,14 @@ export default function Header() {
 
                 <div className="py-1">
                   <button
-                    onClick={() => {
-                      setOpenMenu(null);
-                      navigate("/settings");
-                    }}
+                    onClick={() => { setOpenMenu(null); navigate("/settings"); }}
                     className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50"
                   >
                     <Settings size={16} className="text-gray-400" />
                     Settings
                   </button>
                   <button
-                    onClick={() => {
-                      setOpenMenu(null);
-                      navigate("/preferences");
-                    }}
+                    onClick={() => { setOpenMenu(null); navigate("/preferences"); }}
                     className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50"
                   >
                     <SlidersHorizontal size={16} className="text-gray-400" />
