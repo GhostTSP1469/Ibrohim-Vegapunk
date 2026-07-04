@@ -36,6 +36,7 @@ import { userRoutes } from './modules/users/routes.js';
 import { connectionRoutes } from './modules/connections/routes.js';
 import { conversationRoutes } from './modules/conversations/routes.js';
 import { changeRequestRoutes } from './modules/change-requests/routes.js';
+import { accessRequestRoutes } from './modules/access-requests/routes.js';
 import { workspaceInviteRoutes, inviteRoutes } from './modules/workspace-invites/routes.js';
 
 export interface BuildAppOptions {
@@ -153,6 +154,9 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
   });
   await app.register(changeRequestRoutes, {
     prefix: '/api/v1/workspaces/:workspaceSlug/projects/:projectId/change-requests',
+  });
+  await app.register(accessRequestRoutes, {
+    prefix: '/api/v1/workspaces/:workspaceSlug/access-requests',
   });
 
   // Global social features (not workspace-scoped): user search, friend

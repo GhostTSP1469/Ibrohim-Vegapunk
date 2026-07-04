@@ -128,6 +128,11 @@ model User {
 
   workspace_invites_received WorkspaceInvite[] @relation("InviteUser")
   workspace_invites_sent     WorkspaceInvite[] @relation("InviteActor")
+
+  access_requests_made     AccessRequest[]   @relation("AccessRequester")
+  access_requests_reviewed AccessRequest[]   @relation("AccessReviewer")
+  permission_grants        PermissionGrant[] @relation("GrantUser")
+  permission_grants_given  PermissionGrant[] @relation("GrantBy")
 }
 
 // Rotating refresh tokens. One row per live token; revoked_at set on logout/rotation.
@@ -164,6 +169,8 @@ model Workspace {
   notifications Notification[]
   change_requests ProjectChangeRequest[]
   invites       WorkspaceInvite[]
+  access_requests   AccessRequest[]
+  permission_grants PermissionGrant[]
 }
 
 model WorkspaceMember {
@@ -588,4 +595,49 @@ model WorkspaceInvite {
 
   @@index([user_id, status])
   @@index([workspace_id, status])
+}
+
+// A member's request for a privileged capability they don't have (e.g. edit
+// others' tasks, invite members, change project settings). Admins/owner review;
+// on approve a time-boxed PermissionGrant is issued and the member retries the
+// action. `capability` is one of the strings in lib/permissions.ts; `target_label`
+// captures the human context of what triggered the request (e.g. an issue title).
+model AccessRequest {
+  id           String              @id @default(uuid())
+  workspace_id String
+  project_id   String?
+  requester_id String
+  reviewer_id  String?
+  capability   String
+  target_label String?
+  note         String?
+  status       ChangeRequestStatus @default(pending)
+  created_at   DateTime            @default(now())
+  updated_at   DateTime            @updatedAt
+
+  workspace Workspace @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
+  requester User      @relation("AccessRequester", fields: [requester_id], references: [id], onDelete: Cascade)
+  reviewer  User?     @relation("AccessReviewer", fields: [reviewer_id], references: [id])
+
+  @@index([workspace_id, status])
+  @@index([requester_id, status])
+}
+
+// A time-boxed permission granted to a member after an AccessRequest is approved.
+// While `expires_at` is in the future, the member is treated as having the
+// `capability` even though their role wouldn't normally allow it.
+model PermissionGrant {
+  id            String   @id @default(uuid())
+  workspace_id  String
+  user_id       String
+  capability    String
+  granted_by_id String
+  expires_at    DateTime
+  created_at    DateTime @default(now())
+
+  workspace  Workspace @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
+  user       User      @relation("GrantUser", fields: [user_id], references: [id], onDelete: Cascade)
+  granted_by User      @relation("GrantBy", fields: [granted_by_id], references: [id])
+
+  @@index([workspace_id, user_id, capability, expires_at])
 }

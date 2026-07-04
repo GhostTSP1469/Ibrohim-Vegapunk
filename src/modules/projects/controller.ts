@@ -1,5 +1,6 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import * as projectService from './service.js';
+import { assertCapability } from '../../lib/permissions.js';
 import {
   CreateProjectBodySchema,
   UpdateProjectBodySchema,
@@ -47,6 +48,13 @@ export async function updateProjectHandler(
 ): Promise<void> {
   const { projectId } = request.params as { projectId: string };
   const body = UpdateProjectBodySchema.parse(request.body);
+  await assertCapability(
+    request.server.prisma,
+    request.workspace.id,
+    request.userId,
+    request.workspaceMember.role,
+    'change_project_settings',
+  );
   const project = await projectService.updateProject(
     request.server.prisma,
     request.workspace.id,

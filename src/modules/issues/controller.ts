@@ -1,5 +1,6 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import * as issueService from './service.js';
+import { assertCapability, type Capability } from '../../lib/permissions.js';
 import {
   CreateIssueBodySchema,
   UpdateIssueBodySchema,
@@ -7,6 +8,31 @@ import {
   AssigneeBodySchema,
   LabelAttachBodySchema,
 } from './schema.js';
+
+/**
+ * Members may freely edit/delete their OWN issues; touching someone else's issue
+ * requires the matching capability (by role, or a temporary grant). No-op when the
+ * issue doesn't exist — the service raises the not-found afterwards.
+ */
+async function assertCanTouchIssue(
+  request: FastifyRequest,
+  projectId: string,
+  issueId: string,
+  capability: Capability,
+): Promise<void> {
+  const issue = await request.server.prisma.issue.findFirst({
+    where: { id: issueId, project_id: projectId, deleted_at: null },
+    select: { created_by_id: true },
+  });
+  if (!issue || issue.created_by_id === request.userId) return;
+  await assertCapability(
+    request.server.prisma,
+    request.workspace.id,
+    request.userId,
+    request.workspaceMember.role,
+    capability,
+  );
+}
 
 export async function listIssuesHandler(
   request: FastifyRequest,
@@ -56,6 +82,7 @@ export async function updateIssueHandler(
 ): Promise<void> {
   const { projectId, issueId } = request.params as { projectId: string; issueId: string };
   const body = UpdateIssueBodySchema.parse(request.body);
+  await assertCanTouchIssue(request, projectId, issueId, 'edit_others_task');
   const issue = await issueService.updateIssue(
     request.server.prisma,
     request.workspace.id,
@@ -72,6 +99,7 @@ export async function deleteIssueHandler(
   reply: FastifyReply,
 ): Promise<void> {
   const { projectId, issueId } = request.params as { projectId: string; issueId: string };
+  await assertCanTouchIssue(request, projectId, issueId, 'delete_others_task');
   await issueService.deleteIssue(
     request.server.prisma,
     request.workspace.id,

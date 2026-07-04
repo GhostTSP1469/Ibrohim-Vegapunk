@@ -76,11 +76,12 @@ export async function workspaceRoutes(app: FastifyInstance): Promise<void> {
     },
     addMemberHandler,
   );
+  // Promoting/demoting members is owner-only (see permission matrix).
   app.patch(
     '/:workspaceSlug/members/:userId',
     {
       schema: changeMemberRoleSchema,
-      preHandler: [authenticate, requireWorkspaceMember('admin')],
+      preHandler: [authenticate, requireWorkspaceMember('owner')],
     },
     changeMemberRoleHandler,
   );

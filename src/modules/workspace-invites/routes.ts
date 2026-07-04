@@ -20,9 +20,10 @@ import {
 // Registered at `/api/v1/workspaces/:workspaceSlug`.
 export async function workspaceInviteRoutes(app: FastifyInstance): Promise<void> {
   const member = [authenticate, requireWorkspaceMember()];
-  const admin = [authenticate, requireWorkspaceMember('admin')];
 
-  app.post('/invites', { schema: inviteSchema, preHandler: admin }, inviteHandler);
+  // Any member may reach the invite route; the handler enforces the
+  // `invite_member` capability (admins/owner have it; members need a grant).
+  app.post('/invites', { schema: inviteSchema, preHandler: member }, inviteHandler);
   app.post('/leave', { schema: leaveSchema, preHandler: member }, leaveHandler);
 }
 

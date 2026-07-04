@@ -23,22 +23,26 @@ import {
 } from './controller.js';
 
 export async function projectRoutes(app: FastifyInstance): Promise<void> {
-  // All project routes require workspace membership; some require admin+.
+  // All project routes require workspace membership; some require admin+/owner.
   const member = [authenticate, requireWorkspaceMember()];
   const admin = [authenticate, requireWorkspaceMember('admin')];
+  const owner = [authenticate, requireWorkspaceMember('owner')];
 
   app.get('/', { schema: listProjectsSchema, preHandler: member }, listProjectsHandler);
   app.post('/', { schema: createProjectSchema, preHandler: admin }, createProjectHandler);
 
   app.get('/:projectId', { schema: getProjectSchema, preHandler: member }, getProjectHandler);
+  // Any member may reach the edit route; the handler enforces the
+  // `change_project_settings` capability (admins have it; members need a grant).
   app.patch(
     '/:projectId',
-    { schema: updateProjectSchema, preHandler: admin },
+    { schema: updateProjectSchema, preHandler: member },
     updateProjectHandler,
   );
+  // Deleting a project is owner-only (see permission matrix).
   app.delete(
     '/:projectId',
-    { schema: deleteProjectSchema, preHandler: admin },
+    { schema: deleteProjectSchema, preHandler: owner },
     deleteProjectHandler,
   );
 
