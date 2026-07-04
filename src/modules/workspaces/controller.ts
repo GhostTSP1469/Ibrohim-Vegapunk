@@ -65,6 +65,19 @@ export async function listMembersHandler(
   reply.send(members);
 }
 
+export async function listMemberProjectsHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+): Promise<void> {
+  const { userId } = request.params as { userId: string };
+  const projects = await workspaceService.listMemberProjects(
+    request.server.prisma,
+    request.workspace.id,
+    userId,
+  );
+  reply.send(projects);
+}
+
 export async function addMemberHandler(
   request: FastifyRequest,
   reply: FastifyReply,

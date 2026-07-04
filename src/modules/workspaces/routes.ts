@@ -8,6 +8,7 @@ import {
   updateWorkspaceSchema,
   deleteWorkspaceSchema,
   listMembersSchema,
+  listMemberProjectsSchema,
   addMemberSchema,
   changeMemberRoleSchema,
   removeMemberSchema,
@@ -19,6 +20,7 @@ import {
   updateWorkspaceHandler,
   deleteWorkspaceHandler,
   listMembersHandler,
+  listMemberProjectsHandler,
   addMemberHandler,
   changeMemberRoleHandler,
   removeMemberHandler,
@@ -67,6 +69,14 @@ export async function workspaceRoutes(app: FastifyInstance): Promise<void> {
       preHandler: [authenticate, requireWorkspaceMember()],
     },
     listMembersHandler,
+  );
+  app.get(
+    '/:workspaceSlug/members/:userId/projects',
+    {
+      schema: listMemberProjectsSchema,
+      preHandler: [authenticate, requireWorkspaceMember()],
+    },
+    listMemberProjectsHandler,
   );
   app.post(
     '/:workspaceSlug/members',

@@ -133,6 +133,25 @@ export const listMembersSchema: FastifySchema = {
   response: { 200: { type: 'array', items: memberShape } },
 };
 
+export const listMemberProjectsSchema: FastifySchema = {
+  tags: ['Workspaces'],
+  summary: "List the projects a workspace member belongs to",
+  security,
+  params: {
+    type: 'object',
+    properties: { workspaceSlug: { type: 'string' }, userId: { type: 'string' } },
+  },
+  response: {
+    200: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: { project_id: { type: 'string' }, name: { type: 'string' } },
+      },
+    },
+  },
+};
+
 export const addMemberSchema: FastifySchema = {
   tags: ['Workspaces'],
   summary: 'Add an existing user to the workspace (admin+)',

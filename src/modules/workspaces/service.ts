@@ -73,6 +73,22 @@ export async function listMembers(
   });
 }
 
+/**
+ * The projects (within this workspace) a given member belongs to — resolved in a
+ * single query so the client can render a project checklist without N calls.
+ */
+export async function listMemberProjects(
+  prisma: PrismaClient,
+  workspaceId: string,
+  userId: string,
+): Promise<{ project_id: string; name: string }[]> {
+  const rows = await prisma.projectMember.findMany({
+    where: { user_id: userId, project: { workspace_id: workspaceId } },
+    select: { project_id: true, project: { select: { name: true } } },
+  });
+  return rows.map((r) => ({ project_id: r.project_id, name: r.project.name }));
+}
+
 export async function addMember(
   prisma: PrismaClient,
   workspaceId: string,
