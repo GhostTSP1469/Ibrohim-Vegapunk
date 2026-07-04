@@ -1,9 +1,11 @@
 import { useEffect, useRef } from "react";
+import { useParams } from "react-router-dom";
 import { Bell, X } from "lucide-react";
 import { useToastStore } from "./toast";
 import { useNotificationsStore } from "../../pages/Notifications/NotificationsZustand";
 import { useMessagesStore } from "../../pages/Messages/MessagesZustand";
 import { useInvitesStore } from "../../pages/Invitations/InvitesZustand";
+import { useWorkspaceStore } from "../../pages/Workspace/WorkspaceZustand";
 
 /** Renders the stacked toast alerts (bottom-right). */
 export function Toaster() {
@@ -36,25 +38,32 @@ const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
  * fire anywhere in the app.
  */
 export function AlertWatcher() {
+  const params = useParams();
   const push = useToastStore((s) => s.push);
   const notifUnread = useNotificationsStore((s) => s.unreadCount);
   const conversations = useMessagesStore((s) => s.conversations);
   const invites = useInvitesStore((s) => s.invites);
+  const workspaces = useWorkspaceStore((s) => s.workspaces);
   const fetchConversations = useMessagesStore((s) => s.fetchConversations);
   const fetchInvites = useInvitesStore((s) => s.fetchInvites);
+  const fetchNotifications = useNotificationsStore((s) => s.fetchNotifications);
 
   const msgUnread = conversations.reduce((n, c) => n + (c.unread_count || 0), 0);
   const inviteCount = invites.length;
+  // Keep the notification bell live on ANY page: the active workspace if we're on
+  // one, otherwise the first workspace the user belongs to.
+  const activeSlug = params.workspaceSlug || workspaces[0]?.slug || "";
 
   useEffect(() => {
-    void fetchConversations();
-    void fetchInvites();
-    const t = setInterval(() => {
+    const tick = () => {
       void fetchConversations();
       void fetchInvites();
-    }, 12000);
+      if (activeSlug) void fetchNotifications(activeSlug);
+    };
+    tick();
+    const t = setInterval(tick, 12000);
     return () => clearInterval(t);
-  }, [fetchConversations, fetchInvites]);
+  }, [fetchConversations, fetchInvites, fetchNotifications, activeSlug]);
 
   // -1 = not yet initialised, so the first values never trigger a toast.
   const prev = useRef({ notif: -1, msg: -1, inv: -1 });

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { axiosRequest, getErrorMessage, asList } from "../../api";
 import type { PublicUser } from "../Friends/FriendsZustand";
+import { useWorkspaceStore } from "../Workspace/WorkspaceZustand";
 
 export type InviteKind = "invite" | "leave";
 export type InviteStatus = "pending" | "accepted" | "rejected";
@@ -49,6 +50,9 @@ export const useInvitesStore = create<InvitesState>((set, get) => ({
     try {
       await axiosRequest.post(`/invites/${id}/accept`);
       await get().fetchInvites();
+      // Accepting a join invite makes you a member → refresh the workspace list
+      // so the new workspace shows in the sidebar without a page refresh.
+      void useWorkspaceStore.getState().fetchWorkspaces();
       return true;
     } catch (err) {
       set({ error: getErrorMessage(err) });

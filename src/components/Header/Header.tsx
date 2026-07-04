@@ -4,11 +4,16 @@ import { LogOut, SlidersHorizontal, Inbox, HelpCircle, Shapes, Waypoints, Search
 import { useAuthStore } from "../../pages/Auth/AuthZustand";
 import { useWorkspaceStore } from "../../pages/Workspace/WorkspaceZustand";
 import { useNotificationsStore } from "../../pages/Notifications/NotificationsZustand";
+import { useInvitesStore } from "../../pages/Invitations/InvitesZustand";
 
 export default function Header() {
   const { user, logout } = useAuthStore();
   const workspaces = useWorkspaceStore((s) => s.workspaces);
   const unreadCount = useNotificationsStore((s) => s.unreadCount);
+  const inviteCount = useInvitesStore((s) => s.invites.length);
+  // The bell reflects everything needing attention: unread notifications + pending
+  // invites / leave-requests (which live outside the workspace notification feed).
+  const attention = unreadCount + inviteCount;
   const navigate = useNavigate();
 
   const [openMenu, setOpenMenu] = useState<"workspace" | "profile" | null>(null);
@@ -53,9 +58,9 @@ export default function Header() {
         </button>
         <button onClick={goNotifications} title="Notifications" className="relative flex h-8 w-8 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-100">
           <Inbox size={17} />
-          {unreadCount > 0 && (
+          {attention > 0 && (
             <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white">
-              {unreadCount}
+              {attention}
             </span>
           )}
         </button>

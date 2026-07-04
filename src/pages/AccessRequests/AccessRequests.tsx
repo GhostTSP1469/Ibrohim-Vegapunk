@@ -24,9 +24,15 @@ export default function AccessRequests() {
   const [note, setNote] = useState("");
 
   useEffect(() => {
-    void fetchRequests(workspaceSlug);
-    void fetchGrants(workspaceSlug);
     void fetchMembers(workspaceSlug);
+    const poll = () => {
+      void fetchRequests(workspaceSlug);
+      void fetchGrants(workspaceSlug);
+    };
+    poll();
+    // Keep the queue/status live so an approval or new request shows without a refresh.
+    const t = setInterval(poll, 10000);
+    return () => clearInterval(t);
   }, [fetchRequests, fetchGrants, fetchMembers, workspaceSlug]);
 
   const myRole = members.find((m) => m.user_id === me)?.role as WorkspaceRole | undefined;
