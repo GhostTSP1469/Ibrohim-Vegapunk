@@ -2,9 +2,10 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useParams } from "react-router-dom";
 import {
   Search, SlidersHorizontal, Download, Plus, ChevronDown, Check, Crown, Shield,
-  LogOut, Trash2, X, UserPlus,
+  LogOut, Trash2, X, UserPlus, FolderKanban, Square, CheckSquare, Loader2,
 } from "lucide-react";
-import { useWorkspaceStore } from "../Workspace/WorkspaceZustand";
+import { useWorkspaceStore, type WorkspaceMember } from "../Workspace/WorkspaceZustand";
+import { useProjectsStore } from "../Projects/ProjectsZustand";
 import { useAuthStore } from "../Auth/AuthZustand";
 
 type Role = "owner" | "admin" | "member" | "guest";
@@ -26,6 +27,7 @@ export default function Members() {
   const [roleFilter, setRoleFilter] = useState<Set<Role>>(new Set());
   const [roleMenu, setRoleMenu] = useState<string | null>(null); // user_id whose role dropdown is open
   const [addOpen, setAddOpen] = useState(false);
+  const [projectsFor, setProjectsFor] = useState<WorkspaceMember | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
 
   useEffect(() => {
@@ -34,6 +36,7 @@ export default function Members() {
 
   const myRole = members.find((m) => m.user_id === me)?.role;
   const isOwner = myRole === "owner";
+  const canManage = myRole === "owner" || myRole === "admin";
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -205,17 +208,24 @@ export default function Members() {
                   </td>
                   <td className="px-4 py-3 text-gray-500">Email</td>
                   <td className="px-4 py-3 text-gray-500">{fmtDate(m.created_at)}</td>
-                  <td className="px-2 py-3 text-right">
-                    {isOwner && m.role !== "owner" && m.user_id !== me && (
-                      <button onClick={() => removeMember(workspaceSlug, m.user_id)} className="rounded p-1.5 text-gray-300 hover:bg-gray-100 hover:text-red-600" title="Remove">
-                        <Trash2 size={15} />
-                      </button>
-                    )}
-                    {m.user_id === me && !isOwner && (
-                      <button onClick={onLeave} className="rounded p-1.5 text-gray-300 hover:bg-red-50 hover:text-red-600" title="Leave workspace">
-                        <LogOut size={15} />
-                      </button>
-                    )}
+                  <td className="px-2 py-3">
+                    <span className="flex items-center justify-end gap-1">
+                      {canManage && (
+                        <button onClick={() => setProjectsFor(m)} className="rounded p-1.5 text-gray-300 hover:bg-gray-100 hover:text-brand-600" title="Assign to projects">
+                          <FolderKanban size={15} />
+                        </button>
+                      )}
+                      {isOwner && m.role !== "owner" && m.user_id !== me && (
+                        <button onClick={() => removeMember(workspaceSlug, m.user_id)} className="rounded p-1.5 text-gray-300 hover:bg-gray-100 hover:text-red-600" title="Remove">
+                          <Trash2 size={15} />
+                        </button>
+                      )}
+                      {m.user_id === me && !isOwner && (
+                        <button onClick={onLeave} className="rounded p-1.5 text-gray-300 hover:bg-red-50 hover:text-red-600" title="Leave workspace">
+                          <LogOut size={15} />
+                        </button>
+                      )}
+                    </span>
                   </td>
                 </tr>
               );
@@ -243,6 +253,142 @@ export default function Members() {
           }}
         />
       )}
+
+      {projectsFor && (
+        <MemberProjectsModal slug={workspaceSlug} member={projectsFor} onClose={() => setProjectsFor(null)} />
+      )}
+    </div>
+  );
+}
+
+function MemberProjectsModal({ slug, member, onClose }: { slug: string; member: WorkspaceMember; onClose: () => void }) {
+  const { projects, fetchProjects, addMember, removeMember } = useProjectsStore();
+  const getMemberProjects = useWorkspaceStore((s) => s.getMemberProjects);
+
+  const [inSet, setInSet] = useState<Set<string>>(new Set());
+  const [query, setQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState<string | null>(null); // project id being toggled, or "*" for bulk
+
+  useEffect(() => {
+    let active = true;
+    void (async () => {
+      setLoading(true);
+      await fetchProjects(slug);
+      const mp = await getMemberProjects(slug, member.user_id);
+      if (active) {
+        setInSet(new Set(mp.map((p) => p.project_id)));
+        setLoading(false);
+      }
+    })();
+    return () => { active = false; };
+  }, [slug, member.user_id, fetchProjects, getMemberProjects]);
+
+  const visible = projects.filter((p) =>
+    `${p.name} ${p.identifier}`.toLowerCase().includes(query.trim().toLowerCase()),
+  );
+
+  const toggle = async (pid: string) => {
+    const has = inSet.has(pid);
+    setBusy(pid);
+    const ok = has
+      ? await removeMember(slug, pid, member.user_id)
+      : await addMember(slug, pid, { user_id: member.user_id });
+    if (ok) {
+      setInSet((prev) => {
+        const next = new Set(prev);
+        if (has) next.delete(pid);
+        else next.add(pid);
+        return next;
+      });
+    }
+    setBusy(null);
+  };
+
+  const addAll = async () => {
+    setBusy("*");
+    const todo = projects.filter((p) => !inSet.has(p.id));
+    await Promise.all(todo.map((p) => addMember(slug, p.id, { user_id: member.user_id })));
+    setInSet(new Set(projects.map((p) => p.id)));
+    setBusy(null);
+  };
+  const removeAll = async () => {
+    setBusy("*");
+    const todo = projects.filter((p) => inSet.has(p.id));
+    await Promise.all(todo.map((p) => removeMember(slug, p.id, member.user_id)));
+    setInSet(new Set());
+    setBusy(null);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+      <div className="flex max-h-[80vh] w-full max-w-md flex-col rounded-2xl bg-white p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-800">
+            <FolderKanban size={18} className="text-brand-600" /> Projects · {member.user.display_name}
+          </h2>
+          <button onClick={onClose} className="rounded p-1 text-gray-400 hover:bg-gray-100"><X size={18} /></button>
+        </div>
+
+        <p className="mb-3 text-xs text-gray-400">
+          Toggle the projects this member belongs to. <b className="text-gray-600">{inSet.size}</b> of {projects.length} selected.
+        </p>
+
+        <div className="mb-2 flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search projects…"
+              className="w-full rounded-lg border border-gray-200 py-2 pl-9 pr-3 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+            />
+          </div>
+          <button onClick={addAll} disabled={busy !== null || projects.length === 0} className="rounded-lg border border-gray-200 px-2.5 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50">Add all</button>
+          <button onClick={removeAll} disabled={busy !== null || inSet.size === 0} className="rounded-lg border border-gray-200 px-2.5 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50">Clear</button>
+        </div>
+
+        <div className="-mx-1 flex-1 overflow-y-auto px-1">
+          {loading ? (
+            <div className="flex items-center justify-center gap-2 py-10 text-sm text-gray-400"><Loader2 size={16} className="animate-spin" /> Loading…</div>
+          ) : projects.length === 0 ? (
+            <p className="py-10 text-center text-sm text-gray-400">No projects in this workspace yet.</p>
+          ) : visible.length === 0 ? (
+            <p className="py-10 text-center text-sm text-gray-400">No projects match your search.</p>
+          ) : (
+            <ul className="divide-y divide-gray-50">
+              {visible.map((p) => {
+                const checked = inSet.has(p.id);
+                return (
+                  <li key={p.id}>
+                    <button
+                      onClick={() => toggle(p.id)}
+                      disabled={busy !== null}
+                      className="flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left transition hover:bg-gray-50 disabled:opacity-60"
+                    >
+                      {busy === p.id ? (
+                        <Loader2 size={16} className="animate-spin text-brand-500" />
+                      ) : checked ? (
+                        <CheckSquare size={16} className="text-brand-600" />
+                      ) : (
+                        <Square size={16} className="text-gray-300" />
+                      )}
+                      <span className="flex-1 truncate text-sm font-medium text-gray-800">{p.name}</span>
+                      <span className="rounded bg-gray-100 px-1.5 text-[10px] font-semibold text-gray-500">{p.identifier}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+
+        <div className="mt-4 flex justify-end">
+          <button onClick={onClose} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50">
+            <Check size={15} /> Done
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

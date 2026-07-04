@@ -36,6 +36,7 @@ interface WorkspaceState {
   removeMember: (slug: string, userId: string) => Promise<boolean>;
   invite: (slug: string, data: { email: string; role: "admin" | "member" }) => Promise<boolean>;
   leaveWorkspace: (slug: string) => Promise<boolean>;
+  getMemberProjects: (slug: string, userId: string) => Promise<{ project_id: string; name: string }[]>;
 }
 
 export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
@@ -161,6 +162,17 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     } catch (err) {
       set({ error: getErrorMessage(err) });
       return false;
+    }
+  },
+
+  // The projects a given member belongs to (single request).
+  getMemberProjects: async (slug, userId) => {
+    try {
+      const { data } = await axiosRequest.get(`/workspaces/${slug}/members/${userId}/projects`);
+      return asList<{ project_id: string; name: string }>(data);
+    } catch (err) {
+      set({ error: getErrorMessage(err) });
+      return [];
     }
   },
 }));
