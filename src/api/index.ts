@@ -1,6 +1,9 @@
 import axios, { type InternalAxiosRequestConfig } from "axios";
 
-const baseURL = import.meta.env.VITE_BASE_URL;
+// Prefer the build-time env var, but fall back to the deployed API so the app
+// still works when VITE_BASE_URL isn't set (fresh clone without .env, or a host
+// that doesn't inject build env vars). `.env` is gitignored, so this matters.
+const baseURL = import.meta.env.VITE_BASE_URL || "https://exam4-react2-2.onrender.com/api/v1";
 
 export const SaveTokens = (access: string, refresh: string): void => {
   localStorage.setItem("access", access);
