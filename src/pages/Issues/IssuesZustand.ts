@@ -14,6 +14,7 @@ export interface Issue {
   state_id: string;
   priority: Priority;
   parent_id: string | null;
+  cycle_id: string | null;
   estimate_points: number | null;
   start_date: string | null;
   due_date: string | null;

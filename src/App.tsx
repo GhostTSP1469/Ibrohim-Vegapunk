@@ -30,6 +30,7 @@ import {
   AccessRequests,
   Wiki,
   AI,
+  WorkspaceSettings,
 } from "./router/router";
 
 const wp = "w/:workspaceSlug/projects/:projectId";
@@ -58,6 +59,7 @@ export default function App() {
             { path: "ai", element: <AI /> },
             { path: "w/:workspaceSlug/projects", element: <Projects /> },
             { path: "w/:workspaceSlug/members", element: <Members /> },
+            { path: "w/:workspaceSlug/settings", element: <WorkspaceSettings /> },
             { path: "w/:workspaceSlug/requests", element: <AccessRequests /> },
             { path: "w/:workspaceSlug/notifications", element: <Notifications /> },
             { path: `${wp}/overview`, element: <Overview /> },

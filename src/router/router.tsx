@@ -29,3 +29,4 @@ export const Invitations = lazy(() => import("../pages/Invitations/Invitations")
 export const AccessRequests = lazy(() => import("../pages/AccessRequests/AccessRequests"));
 export const Wiki = lazy(() => import("../pages/Wiki/Wiki"));
 export const AI = lazy(() => import("../pages/AI/AI"));
+export const WorkspaceSettings = lazy(() => import("../pages/WorkspaceSettings/WorkspaceSettings"));

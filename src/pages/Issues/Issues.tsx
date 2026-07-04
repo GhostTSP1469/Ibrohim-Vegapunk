@@ -20,6 +20,7 @@ import {AlertTriangle,SignalHigh,SignalMedium,SignalLow,Minus,Plus,CircleDashed,
   ArrowUpRight,
 } from "lucide-react";
 import { useIssuesStore, type Issue, type Priority } from "./IssuesZustand";
+import { useIssueDrawer } from "./IssueDrawerZustand";
 import { useStatesStore, type WorkflowState } from "../States/StatesZustand";
 
 /* ------------------------------------------------------------------ */
@@ -233,6 +234,7 @@ export default function Issues() {
   const { workspaceSlug = "", projectId = "" } = useParams();
   const { issues, loading, error, fetchIssues, createIssue, updateIssue, deleteIssue } = useIssuesStore();
   const { states, fetchStates } = useStatesStore();
+  const openDrawer = useIssueDrawer((s) => s.open);
 
   const [view, setView] = useState<ViewKey>("list");
   const [modalOpen, setModalOpen] = useState(false);
@@ -627,12 +629,12 @@ export default function Issues() {
                         <td className="px-4 py-2.5">
                           <div className="flex items-center gap-2">
                             <span className="text-xs font-semibold text-gray-400">#{i.sequence_id}</span>
-                            <Link
-                              to={`/w/${workspaceSlug}/projects/${projectId}/issues/${i.id}/comments`}
-                              className="font-medium text-gray-800 hover:text-brand-600"
+                            <button
+                              onClick={() => openDrawer(workspaceSlug, projectId, i)}
+                              className="text-left font-medium text-gray-800 hover:text-brand-600"
                             >
                               {i.title}
-                            </Link>
+                            </button>
                           </div>
                         </td>
                         <td className="px-4 py-2.5">
@@ -752,6 +754,7 @@ function IssueRow({
   workspaceSlug: string;
   projectId: string;
 }) {
+  const openDrawer = useIssueDrawer((s) => s.open);
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(issue.title);
   const [stateId, setStateId] = useState(issue.state_id);
@@ -794,7 +797,7 @@ function IssueRow({
       </form>
     );
   }
-Search
+
   return (
     <div
       className="row-in group flex items-center gap-3 border-b border-gray-100 px-4 py-2.5 transition last:border-b-0 hover:bg-gray-50/70"
@@ -803,9 +806,9 @@ Search
       <span className="w-14 shrink-0 text-xs font-semibold text-gray-400">
         {workspaceSlug.slice(0, 3).toUpperCase() || "ISS"}-{issue.sequence_id}
       </span>
-      <Link to={`/w/${workspaceSlug}/projects/${projectId}/issues/${issue.id}/comments`} className="flex-1 truncate text-sm text-gray-800 transition hover:text-brand-600">
+      <button onClick={() => openDrawer(workspaceSlug, projectId, issue)} className="flex-1 truncate text-left text-sm text-gray-800 transition hover:text-brand-600">
         {issue.title}
-      </Link>
+      </button>
       <PriorityPill priority={issue.priority} />
       <Avatar />
       <span className="flex shrink-0 gap-1 opacity-0 transition group-hover:opacity-100">

@@ -202,6 +202,9 @@ export default function Sidebar() {
                 <NavLink to={`/w/${workspaceSlug}/requests`} className={linkCls}>
                   <ShieldCheck size={16} /> <span>Requests</span>
                 </NavLink>
+                <NavLink to={`/w/${workspaceSlug}/settings`} className={linkCls}>
+                  <Settings size={16} /> <span>Settings</span>
+                </NavLink>
                 {projects.map((p) => {
                   const isOpen = openFolder === p.id;
                   return (
