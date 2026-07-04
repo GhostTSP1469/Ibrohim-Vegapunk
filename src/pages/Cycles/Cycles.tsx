@@ -25,18 +25,14 @@ export default function Cycles() {
     void fetchStates(workspaceSlug, projectId);
   }, [fetchCycles, fetchIssues, fetchStates, workspaceSlug, projectId]);
 
-  // Default-select the first cycle once loaded.
-  useEffect(() => {
-    if (!selectedId && cycles.length > 0) setSelectedId(cycles[0].id);
-  }, [cycles, selectedId]);
-
   const groupById = useMemo(() => {
     const m = new Map<string, StateGroup>();
     states.forEach((s) => m.set(s.id, s.group));
     return m;
   }, [states]);
 
-  const selected = cycles.find((c) => c.id === selectedId) ?? null;
+  // Fall back to the first cycle until the user explicitly picks one.
+  const selected = cycles.find((c) => c.id === selectedId) ?? cycles[0] ?? null;
 
   const stats = useMemo(() => {
     if (!selected) return null;
@@ -82,10 +78,10 @@ export default function Cycles() {
                 key={c.id}
                 onClick={() => setSelectedId(c.id)}
                 className={`group flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm transition ${
-                  selectedId === c.id ? "bg-brand-50 text-brand-700" : "text-gray-600 hover:bg-gray-50"
+                  selected?.id === c.id ? "bg-brand-50 text-brand-700" : "text-gray-600 hover:bg-gray-50"
                 }`}
               >
-                <RefreshCw size={14} className={selectedId === c.id ? "text-brand-600" : "text-gray-400"} />
+                <RefreshCw size={14} className={selected?.id === c.id ? "text-brand-600" : "text-gray-400"} />
                 <span className="flex-1 truncate font-medium">{c.name}</span>
                 <span
                   onClick={(e) => { e.stopPropagation(); void deleteCycle(workspaceSlug, projectId, c.id); }}

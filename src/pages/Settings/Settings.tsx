@@ -14,12 +14,14 @@ export default function Settings() {
     if (!user) void getMe();
   }, [user, getMe]);
 
-  useEffect(() => {
-    if (user) {
-      setName(user.display_name);
-      setAvatar(user.avatar_url ?? "");
-    }
-  }, [user]);
+  // Populate the form from the loaded user — React's "adjust state during
+  // render" pattern (track previous value in state, guarded by user id).
+  const [prevUserId, setPrevUserId] = useState<string | undefined>(undefined);
+  if (user && user.id !== prevUserId) {
+    setPrevUserId(user.id);
+    setName(user.display_name);
+    setAvatar(user.avatar_url ?? "");
+  }
 
   const onSave = async (e: FormEvent) => {
     e.preventDefault();

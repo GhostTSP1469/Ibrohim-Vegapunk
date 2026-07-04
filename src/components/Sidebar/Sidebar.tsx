@@ -90,9 +90,13 @@ export default function Sidebar() {
     return () => clearInterval(t);
   }, [workspaceSlug, fetchNotifications]);
 
-  useEffect(() => {
-    if (projectId) setOpenFolder(projectId);
-  }, [projectId]);
+  // Auto-expand the folder of the project in the URL — React's "adjust state
+  // during render" pattern (track previous value in state, no effect/ref).
+  const [prevProjectId, setPrevProjectId] = useState("");
+  if (projectId && projectId !== prevProjectId) {
+    setPrevProjectId(projectId);
+    setOpenFolder(projectId);
+  }
 
   return (
     <div className="flex h-full bg-white font-sans text-[15px] text-gray-800 ">

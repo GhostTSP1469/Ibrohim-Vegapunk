@@ -101,9 +101,13 @@ export default function Wiki() {
     return () => clearInterval(timer);
   }, []);
 
-  useEffect(() => {
+  // Load notes for the active workspace — React's "adjust state during render"
+  // pattern (track previous slug in state), avoiding a set-state-in-effect.
+  const [prevSlug, setPrevSlug] = useState<string | undefined>(undefined);
+  if (workspaceSlug !== prevSlug) {
+    setPrevSlug(workspaceSlug);
     setNotes(loadNotes(workspaceSlug));
-  }, [workspaceSlug]);
+  }
 
   function pushToast(title: string, subtitle: string) {
     const id = crypto.randomUUID();

@@ -216,7 +216,8 @@ export const useMessagesStore = create<MessagesState>((set, get) => ({
       );
       await get().fetchConversations();
 
-      const { [safeMsg]: _drop, ...rest } = get().editedIds;
+      const rest = { ...get().editedIds };
+      delete rest[safeMsg];
       set({ editedIds: rest });
       saveEditOverlay(rest);
 

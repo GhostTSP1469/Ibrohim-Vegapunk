@@ -9,7 +9,7 @@ import { useCommentsStore } from "../../pages/Comments/CommentsZustand";
 import { useStatesStore, type StateGroup } from "../../pages/States/StatesZustand";
 import { useAuthStore } from "../../pages/Auth/AuthZustand";
 import { useToastStore } from "./toast";
-import type { Priority } from "../../pages/Issues/IssuesZustand";
+import type { Issue, Priority } from "../../pages/Issues/IssuesZustand";
 
 const stateGroupIcon: Record<StateGroup, { icon: typeof Circle; cls: string }> = {
   backlog: { icon: CircleDashed, cls: "text-gray-400" },
@@ -42,6 +42,12 @@ const timeAgo = (iso: string) => {
 
 export default function IssueDrawer() {
   const { slug, projectId, issue, close } = useIssueDrawer();
+  if (!issue) return null;
+  // Keyed by issue id so opening a different work item remounts with fresh state.
+  return <DrawerPanel key={issue.id} slug={slug} projectId={projectId} issue={issue} onClose={close} />;
+}
+
+function DrawerPanel({ slug, projectId, issue, onClose }: { slug: string; projectId: string; issue: Issue; onClose: () => void }) {
   const { comments, fetchComments, createComment } = useCommentsStore();
   const { states, fetchStates } = useStatesStore();
   const meName = useAuthStore((s) => s.user?.display_name);
@@ -53,24 +59,21 @@ export default function IssueDrawer() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (!issue) return;
     void fetchComments(slug, projectId, issue.id);
+  }, [fetchComments, slug, projectId, issue.id]);
+
+  useEffect(() => {
     if (states.length === 0) void fetchStates(slug, projectId);
-    setTab("all");
-    setBody("");
-  }, [issue, slug, projectId, fetchComments, fetchStates, states.length]);
+  }, [fetchStates, states.length, slug, projectId]);
 
   // Close on Escape.
   useEffect(() => {
-    if (!issue) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && close();
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [issue, close]);
+  }, [onClose]);
 
-  const state = useMemo(() => states.find((s) => s.id === issue?.state_id), [states, issue]);
-
-  if (!issue) return null;
+  const state = useMemo(() => states.find((s) => s.id === issue.state_id), [states, issue.state_id]);
 
   const prefix = slug.slice(0, 5).toUpperCase() || "ISS";
   const grp = state?.group ?? "backlog";
@@ -92,7 +95,7 @@ export default function IssueDrawer() {
   };
 
   return (
-    <div className="fixed inset-0 z-90 flex justify-end bg-black/25" onClick={close}>
+    <div className="fixed inset-0 z-90 flex justify-end bg-black/25" onClick={onClose}>
       <aside
         className="flex h-full w-full max-w-140 flex-col bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
@@ -103,7 +106,7 @@ export default function IssueDrawer() {
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3">
           <span className="text-xs font-semibold text-gray-400">{prefix}-{issue.sequence_id}</span>
-          <button onClick={close} className="rounded-md p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"><X size={16} /></button>
+          <button onClick={onClose} className="rounded-md p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"><X size={16} /></button>
         </div>
 
         <div className="flex-1 overflow-y-auto">

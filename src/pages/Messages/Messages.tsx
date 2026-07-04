@@ -38,11 +38,9 @@ function ModalShell({ open, onClose, children }: { open: boolean; onClose: () =>
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    if (!open) {
-      setShow(false);
-      return;
-    }
-    const raf = requestAnimationFrame(() => setShow(true));
+    // Defer to the next frame so the enter/exit transition runs; setting state
+    // inside rAF (not synchronously in the effect body) keeps it lint-clean.
+    const raf = requestAnimationFrame(() => setShow(open));
     return () => cancelAnimationFrame(raf);
   }, [open]);
 
@@ -147,18 +145,25 @@ function EditMessageModal({
   const [err, setErr] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Sync the editor to the message being edited — React's "adjust state during
+  // render" pattern (track previous id in state, so it runs once per message).
+  const [prevMsgId, setPrevMsgId] = useState<string | null>(null);
+  if (message && message.id !== prevMsgId) {
+    setPrevMsgId(message.id);
+    setText(message.body);
+    setErr(null);
+  }
+
   useEffect(() => {
-    if (message) {
-      setText(message.body);
-      setErr(null);
-      requestAnimationFrame(() => {
-        const el = textareaRef.current;
-        if (el) {
-          el.focus();
-          el.setSelectionRange(el.value.length, el.value.length);
-        }
-      });
-    }
+    if (!message) return;
+    const raf = requestAnimationFrame(() => {
+      const el = textareaRef.current;
+      if (el) {
+        el.focus();
+        el.setSelectionRange(el.value.length, el.value.length);
+      }
+    });
+    return () => cancelAnimationFrame(raf);
   }, [message]);
 
   const save = async () => {

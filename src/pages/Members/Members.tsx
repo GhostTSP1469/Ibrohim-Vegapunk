@@ -50,7 +50,8 @@ export default function Members() {
   const toggleRoleFilter = (r: Role) =>
     setRoleFilter((prev) => {
       const next = new Set(prev);
-      next.has(r) ? next.delete(r) : next.add(r);
+      if (next.has(r)) next.delete(r);
+      else next.add(r);
       return next;
     });
 
