@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { axiosRequest, getErrorMessage } from "../../api";
+import { gateFromError } from "../AccessRequests/AccessZustand";
 
 export type Priority = "none" | "low" | "medium" | "high" | "urgent";
 
@@ -113,7 +114,8 @@ export const useIssuesStore = create<IssuesState>((set, get) => ({
       await get().fetchIssues(slug, projectId);
       return true;
     } catch (err) {
-      set({ error: getErrorMessage(err) });
+      // Editing someone else's task without rights → request-permission gate.
+      if (!gateFromError(err, slug, "a task", projectId)) set({ error: getErrorMessage(err) });
       return false;
     }
   },
@@ -124,7 +126,8 @@ export const useIssuesStore = create<IssuesState>((set, get) => ({
       await get().fetchIssues(slug, projectId);
       return true;
     } catch (err) {
-      set({ error: getErrorMessage(err) });
+      // Deleting someone else's task without rights → request-permission gate.
+      if (!gateFromError(err, slug, "a task", projectId)) set({ error: getErrorMessage(err) });
       return false;
     }
   },

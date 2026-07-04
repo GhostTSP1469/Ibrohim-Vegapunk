@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { axiosRequest, getErrorMessage, asList } from "../../api";
+import { gateFromError } from "../AccessRequests/AccessZustand";
 
 export interface Project {
   id: string;
@@ -97,7 +98,8 @@ export const useProjectsStore = create<ProjectsState>((set, get) => ({
       await get().fetchProjects(slug);
       return true;
     } catch (err) {
-      set({ error: getErrorMessage(err) });
+      // A member without settings rights gets the "request temporary permission" gate.
+      if (!gateFromError(err, slug, "project settings", projectId)) set({ error: getErrorMessage(err) });
       return false;
     }
   },

@@ -38,6 +38,14 @@ export const getErrorMessage = (err: unknown): string => {
   return "Unexpected error";
 };
 
+// A 403 from a capability-guarded action carries { error: { details: { capability } } }.
+// Returns that capability string so the UI can offer to request temporary access.
+export const getErrorCapability = (err: unknown): string | null => {
+  if (!axios.isAxiosError(err) || err.response?.status !== 403) return null;
+  const data = err.response?.data as { error?: { details?: { capability?: string } } } | undefined;
+  return data?.error?.details?.capability ?? null;
+};
+
 export const axiosRequest = axios.create({ baseURL });
 
 // Attach the access token to every outgoing request.

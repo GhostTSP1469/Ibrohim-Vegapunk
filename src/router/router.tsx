@@ -26,3 +26,4 @@ export const Messages = lazy(() => import("../pages/Messages/Messages"));
 export const ChangeRequests = lazy(() => import("../pages/ChangeRequests/ChangeRequests"));
 export const Members = lazy(() => import("../pages/Members/Members"));
 export const Invitations = lazy(() => import("../pages/Invitations/Invitations"));
+export const AccessRequests = lazy(() => import("../pages/AccessRequests/AccessRequests"));

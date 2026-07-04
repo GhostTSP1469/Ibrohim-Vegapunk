@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { axiosRequest, getErrorMessage, asList } from "../../api";
+import { gateFromError } from "../AccessRequests/AccessZustand";
 
 export interface Workspace {
   id: string;
@@ -146,7 +147,8 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       await axiosRequest.post(`/workspaces/${slug}/invites`, data);
       return true;
     } catch (err) {
-      set({ error: getErrorMessage(err) });
+      // A member without invite rights gets the "request temporary permission" gate.
+      if (!gateFromError(err, slug, "invite members")) set({ error: getErrorMessage(err) });
       return false;
     }
   },

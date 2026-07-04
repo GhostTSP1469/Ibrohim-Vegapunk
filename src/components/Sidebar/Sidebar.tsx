@@ -23,9 +23,9 @@ import {
   Bell,
   Eye,
   StickyNote,
-  ClipboardList,
   Mail,
   UserCog,
+  ShieldCheck,
   type LucideIcon,
 } from "lucide-react";
 import { useWorkspaceStore } from "../../pages/Workspace/WorkspaceZustand";
@@ -58,7 +58,6 @@ function projectFiles(slug: string, pid: string): { icon: LucideIcon; label: str
     { icon: Tag, label: "Labels", to: `${base}/labels` },
     { icon: RefreshCw, label: "Cycles", to: `${base}/cycles` },
     { icon: Layers, label: "Modules", to: `${base}/modules` },
-    { icon: ClipboardList, label: "Requests", to: `${base}/change-requests` },
     { icon: Eye, label: "Views", to: `${base}/views` },
     { icon: StickyNote, label: "Pages", to: `${base}/pages` },
   ];
@@ -182,6 +181,9 @@ export default function Sidebar() {
                 </NavLink>
                 <NavLink to={`/w/${workspaceSlug}/members`} className={linkCls}>
                   <UserCog size={16} /> <span>Members</span>
+                </NavLink>
+                <NavLink to={`/w/${workspaceSlug}/requests`} className={linkCls}>
+                  <ShieldCheck size={16} /> <span>Requests</span>
                 </NavLink>
                 {projects.map((p) => {
                   const isOpen = openFolder === p.id;

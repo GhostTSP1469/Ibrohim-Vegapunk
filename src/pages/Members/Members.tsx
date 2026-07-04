@@ -63,7 +63,9 @@ export default function Members() {
       <ErrorBanner error={error} />
       {msg && <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{msg}</p>}
 
-      {canManage && (
+      {/* Shown to any member; members without invite rights get the
+          "request temporary permission" gate on submit. */}
+      {myRole && (
         <form onSubmit={onInvite} className={`flex flex-wrap items-center gap-2 p-3 ${card}`}>
           <input className={field + " flex-1"} type="email" placeholder="Invite a user by email…" value={email} onChange={(e) => setEmail(e.target.value)} required />
           <select className={field + " w-32"} value={role} onChange={(e) => setRole(e.target.value as "admin" | "member")}>

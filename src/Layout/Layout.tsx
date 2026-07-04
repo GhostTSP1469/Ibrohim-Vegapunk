@@ -3,6 +3,7 @@ import { Outlet } from "react-router-dom";
 import Header from "../components/Header/Header";
 import Sidebar from "../components/Sidebar/Sidebar";
 import { Toaster, AlertWatcher } from "../components/ui/Toaster";
+import AccessGate from "../components/ui/AccessGate";
 import { useAuthStore } from "../pages/Auth/AuthZustand";
 import { getToken } from "../api";
 
@@ -29,6 +30,7 @@ export default function Layout() {
       </div>
       <AlertWatcher />
       <Toaster />
+      <AccessGate />
     </div>
   );
 }

@@ -27,6 +27,7 @@ import {
   ChangeRequests,
   Members,
   Invitations,
+  AccessRequests,
 } from "./router/router";
 
 const wp = "w/:workspaceSlug/projects/:projectId";
@@ -53,6 +54,7 @@ export default function App() {
             { path: "preferences", element: <Preferences /> },
             { path: "w/:workspaceSlug/projects", element: <Projects /> },
             { path: "w/:workspaceSlug/members", element: <Members /> },
+            { path: "w/:workspaceSlug/requests", element: <AccessRequests /> },
             { path: "w/:workspaceSlug/notifications", element: <Notifications /> },
             { path: `${wp}/overview`, element: <Overview /> },
             { path: `${wp}/work-items`, element: <WorkItems /> },
