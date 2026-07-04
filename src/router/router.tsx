@@ -27,3 +27,5 @@ export const ChangeRequests = lazy(() => import("../pages/ChangeRequests/ChangeR
 export const Members = lazy(() => import("../pages/Members/Members"));
 export const Invitations = lazy(() => import("../pages/Invitations/Invitations"));
 export const AccessRequests = lazy(() => import("../pages/AccessRequests/AccessRequests"));
+export const Wiki = lazy(() => import("../pages/Wiki/Wiki"));
+export const AI = lazy(() => import("../pages/AI/AI"));

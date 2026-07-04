@@ -34,9 +34,9 @@ import { useNotificationsStore } from "../../pages/Notifications/NotificationsZu
 import { useInvitesStore } from "../../pages/Invitations/InvitesZustand";
 
 const railItems = [
-  { icon: Boxes, label: "Projects", active: true },
-  { icon: Component, label: "Wiki", active: false },
-  { icon: Sparkles, label: "AI", active: false },
+  {icon: Boxes, label: "Projects", to: "/",},
+  {icon: Component,label: "Wiki",to: "/wiki",},
+  {icon: Sparkles,label: "AI",to: "/ai",},
 ];
 
 const linkCls = ({ isActive }: { isActive: boolean }) =>
@@ -95,7 +95,7 @@ export default function Sidebar() {
   }, [projectId]);
 
   return (
-    <div className="flex h-full bg-white font-sans text-[15px] text-gray-800">
+    <div className="flex h-full bg-white font-sans text-[15px] text-gray-800 ">
       {/* ── Icon rail ── */}
       <div className="relative flex w-16 shrink-0 flex-col items-center justify-between border-r border-gray-100 py-4">
         {!panelOpen && (
@@ -107,18 +107,35 @@ export default function Sidebar() {
           </button>
         )}
         <div className="flex flex-col items-center gap-1">
-          {railItems.map(({ icon: Icon, label, active }) => (
-            <div key={label} className="flex flex-col items-center gap-1 px-2 py-2">
-              <div
-                className={`flex h-9 w-9 items-center justify-center rounded-lg ${
-                  active ? "bg-gray-900 text-white shadow-sm" : "text-gray-400"
-                }`}
-              >
-                <Icon size={17} strokeWidth={2} />
-              </div>
-              <span className={`text-[11px] font-medium ${active ? "text-gray-900" : "text-gray-400"}`}>{label}</span>
-            </div>
-          ))}
+         {railItems.map(({ icon: Icon, label, to }) => (
+  <NavLink
+    key={label}
+    to={to}
+    className="flex flex-col items-center gap-1 px-2 py-2"
+  >
+    {({ isActive }) => (
+      <>
+        <div
+          className={`flex h-9 w-9 items-center justify-center rounded-lg ${
+            isActive
+              ? "bg-gray-900 text-white shadow-sm"
+              : "text-gray-400"
+          }`}
+        >
+          <Icon size={17} strokeWidth={2} />
+        </div>
+
+        <span
+          className={`text-[11px] font-medium ${
+            isActive ? "text-gray-900" : "text-gray-400"
+          }`}
+        >
+          {label}
+        </span>
+      </>
+    )}
+  </NavLink>
+))}
         </div>
         <Link to="/settings" className="flex flex-col items-center gap-1 px-2 py-2 text-gray-400 hover:text-gray-700">
           <Settings size={18} />
@@ -131,7 +148,7 @@ export default function Sidebar() {
         className="overflow-hidden border-r border-gray-100 transition-all duration-300"
         style={{ width: panelOpen ? "272px" : "0px" }}
       >
-        <div className="flex h-full w-68 flex-col">
+        <div className="flex h-full w-68 flex-col ">
           <div className="flex items-center justify-between px-4 pt-4">
             <span className="text-[15px] font-semibold text-gray-900">Workspace</span>
             <button onClick={() => setPanelOpen(false)} className="rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700">

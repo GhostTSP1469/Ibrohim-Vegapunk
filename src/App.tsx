@@ -28,6 +28,8 @@ import {
   Members,
   Invitations,
   AccessRequests,
+  Wiki,
+  AI,
 } from "./router/router";
 
 const wp = "w/:workspaceSlug/projects/:projectId";
@@ -52,6 +54,8 @@ export default function App() {
             { path: "invitations", element: <Invitations /> },
             { path: "settings", element: <Settings /> },
             { path: "preferences", element: <Preferences /> },
+            { path: "wiki", element: <Wiki /> },
+            { path: "ai", element: <AI /> },
             { path: "w/:workspaceSlug/projects", element: <Projects /> },
             { path: "w/:workspaceSlug/members", element: <Members /> },
             { path: "w/:workspaceSlug/requests", element: <AccessRequests /> },
@@ -70,6 +74,8 @@ export default function App() {
             { path: `${wpi}/relations`, element: <IssueRelations /> },
             { path: `${wpi}/activity`, element: <Activity /> },
             { path: `${wpi}/attachments`, element: <Attachments /> },
+            { path: `${wpi}/wiki`, element: <Wiki /> },
+            { path: `${wpi}/ai`, element: <AI /> },
           ],
         },
       ],
