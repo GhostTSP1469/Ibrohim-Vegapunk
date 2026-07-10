@@ -38,6 +38,7 @@ import { conversationRoutes } from './modules/conversations/routes.js';
 import { changeRequestRoutes } from './modules/change-requests/routes.js';
 import { accessRequestRoutes } from './modules/access-requests/routes.js';
 import { workspaceInviteRoutes, inviteRoutes } from './modules/workspace-invites/routes.js';
+import { todoRoutes } from './modules/todos/routes.js';
 
 export interface BuildAppOptions {
   /** Pino logger options, or `false`/`true` to disable/enable the default logger. */
@@ -164,6 +165,8 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
   await app.register(userRoutes, { prefix: '/api/v1/users' });
   await app.register(connectionRoutes, { prefix: '/api/v1/connections' });
   await app.register(conversationRoutes, { prefix: '/api/v1/conversations' });
+  // Personal to-do list (authenticated, per-user).
+  await app.register(todoRoutes, { prefix: '/api/v1/todos' });
   await app.register(inviteRoutes, { prefix: '/api/v1/invites' });
   await app.register(workspaceInviteRoutes, { prefix: '/api/v1/workspaces/:workspaceSlug' });
 

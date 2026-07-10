@@ -133,6 +133,8 @@ model User {
   access_requests_reviewed AccessRequest[]   @relation("AccessReviewer")
   permission_grants        PermissionGrant[] @relation("GrantUser")
   permission_grants_given  PermissionGrant[] @relation("GrantBy")
+
+  todos Todo[]
 }
 
 // Rotating refresh tokens. One row per live token; revoked_at set on logout/rotation.
@@ -640,4 +642,19 @@ model PermissionGrant {
   granted_by User      @relation("GrantBy", fields: [granted_by_id], references: [id])
 
   @@index([workspace_id, user_id, capability, expires_at])
+}
+
+// A personal to-do list, scoped to the owning user (not workspace-scoped).
+// Added as a self-contained module; auth via the standard JWT access token.
+model Todo {
+  id         String   @id @default(uuid())
+  user_id    String
+  title      String
+  completed  Boolean  @default(false)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
 }
