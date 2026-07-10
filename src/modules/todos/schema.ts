@@ -7,7 +7,13 @@ export const CreateTodoBodySchema = z.object({
   title: z.string().min(1).max(500),
 });
 
+export const UpdateTodoBodySchema = z.object({
+  title: z.string().min(1).max(500).optional(),
+  completed: z.boolean().optional(),
+});
+
 export type CreateTodoBody = z.infer<typeof CreateTodoBodySchema>;
+export type UpdateTodoBody = z.infer<typeof UpdateTodoBodySchema>;
 
 // ─── Fastify route schemas (OpenAPI + response serialization) ─────────────────
 
@@ -31,6 +37,13 @@ export const listTodosSchema: FastifySchema = {
   response: { 200: { type: 'array', items: todoShape } },
 };
 
+export const getTodoSchema: FastifySchema = {
+  tags: ['Todos'],
+  summary: 'Get a single todo',
+  security,
+  response: { 200: todoShape },
+};
+
 export const createTodoSchema: FastifySchema = {
   tags: ['Todos'],
   summary: 'Create a todo',
@@ -43,10 +56,17 @@ export const createTodoSchema: FastifySchema = {
   response: { 201: todoShape },
 };
 
-export const toggleTodoSchema: FastifySchema = {
+export const updateTodoSchema: FastifySchema = {
   tags: ['Todos'],
-  summary: "Toggle a todo's completed flag",
+  summary: 'Update a todo (title and/or completed). Empty body toggles completed.',
   security,
+  body: {
+    type: 'object',
+    properties: {
+      title: { type: 'string', minLength: 1, maxLength: 500 },
+      completed: { type: 'boolean' },
+    },
+  },
   response: { 200: todoShape },
 };
 

@@ -1,6 +1,6 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import * as todoService from './service.js';
-import { CreateTodoBodySchema } from './schema.js';
+import { CreateTodoBodySchema, UpdateTodoBodySchema } from './schema.js';
 
 export async function listTodosHandler(
   request: FastifyRequest,
@@ -8,6 +8,15 @@ export async function listTodosHandler(
 ): Promise<void> {
   const todos = await todoService.listTodos(request.server.prisma, request.userId);
   reply.send(todos);
+}
+
+export async function getTodoHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+): Promise<void> {
+  const { todoId } = request.params as { todoId: string };
+  const todo = await todoService.getTodo(request.server.prisma, request.userId, todoId);
+  reply.send(todo);
 }
 
 export async function createTodoHandler(
@@ -19,12 +28,13 @@ export async function createTodoHandler(
   reply.code(201).send(todo);
 }
 
-export async function toggleTodoHandler(
+export async function updateTodoHandler(
   request: FastifyRequest,
   reply: FastifyReply,
 ): Promise<void> {
   const { todoId } = request.params as { todoId: string };
-  const todo = await todoService.toggleTodo(request.server.prisma, request.userId, todoId);
+  const body = UpdateTodoBodySchema.parse(request.body ?? {});
+  const todo = await todoService.updateTodo(request.server.prisma, request.userId, todoId, body);
   reply.send(todo);
 }
 
